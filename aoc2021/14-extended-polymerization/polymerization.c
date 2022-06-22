@@ -4,7 +4,7 @@
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
 
-#define NUM_STEPS 10
+#define NUM_STEPS 40
 
 typedef struct {
     char *key;
@@ -23,7 +23,7 @@ typedef struct node_s {
 } node_t;
 
 void print_polymer(node_t *start);
-void get_element_counts(count_t *hashmap, node_t *start);
+count_t *get_element_counts(node_t *start);
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -73,14 +73,12 @@ int main(int argc, char **argv) {
 
     free(template);
 
-    print_polymer(start);
+    /*print_polymer(start);*/
 
     count_t *counts[NUM_STEPS];
 
     /* perform insertions */
     for (int i=0; i<NUM_STEPS; ++i) {
-        count_t *step_counts = NULL;
-        hmdefault(step_counts, 0);
         node_t *current = start;
 
         while (current) {
@@ -99,12 +97,19 @@ int main(int argc, char **argv) {
                 current = current->next;
             }
         }
-        print_polymer(start);
+        /*print_polymer(start);*/
 
-        /* TODO: still broken, fix this */
-        get_element_counts(step_counts, start);
-        printf("%c: %d\n", 'N', hmget(step_counts, 'N'));
+
+        count_t *step_counts = get_element_counts(start);
         counts[i] = step_counts;
+
+
+        if (i == 0) continue;
+
+        uint64_t n_count = hmget(step_counts, 'N');
+        double n_growth_rate = (n_count - hmget(counts[i-1], 'N')) / (double)hmget(counts[i-1], 'N');
+        printf("%f\n", n_growth_rate);
+        printf("step %d: N count=%u growth_rate=%f\n", i, hmget(step_counts, 'N'), n_growth_rate);
     }
 
     return 0;
@@ -118,14 +123,19 @@ void print_polymer(node_t *start) {
     printf("\n");
 }
 
-void get_element_counts(count_t *hashmap, node_t *start) {
+count_t *get_element_counts(node_t *start) {
+    count_t *counts = NULL;
+    hmdefault(counts, 0);
+
     node_t *current = start;
     while (current) {
         char data = current->data;
-        uint64_t count = hmget(hashmap, data);
-        hmput(hashmap, data, count+1);
+        uint64_t count = hmget(counts, data);
+        hmput(counts, data, count+1);
         current = current->next;
     }
+
+    return counts;
 }
 
 
