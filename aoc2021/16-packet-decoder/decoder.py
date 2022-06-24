@@ -50,6 +50,41 @@ class Node:
         self.children = []
         self.value = None
 
+    def evaluate(self):
+        if self.type == 0:   # sum
+            result = 0
+            for child in self.children:
+                result += child.evaluate()
+
+        elif self.type == 1: # product
+            result = 1
+            for child in self.children:
+                result *= child.evaluate()
+
+        elif self.type == 2: # min
+            result = self.children[0].evaluate()
+            for child in self.children[1:]:
+                result = min(result, child.evaluate())
+
+        elif self.type == 3: # max
+            result = self.children[0].evaluate()
+            for child in self.children[1:]:
+                result = max(result, child.evaluate())
+
+        elif self.type == 4: # literal
+            result = self.value
+
+        elif self.type == 5: # greater than
+            result = self.children[0].evaluate() > self.children[1].evaluate()
+
+        elif self.type == 6: # less than
+            result = self.children[0].evaluate() < self.children[1].evaluate()
+
+        elif self.type == 7: # equal
+            result = self.children[0].evaluate() == self.children[1].evaluate()
+
+        return result
+
     def __str__(self):
         if self.value:
             return f"{self.value}"
@@ -76,19 +111,22 @@ def part_one(binary):
     print(version_sum)
 
 
-
 def part_two(binary):
-    pass
+    parser = Parser(binary)
+    ast = parser.read_packet()
+    result = ast.evaluate()
+    print(result)
+
 
 if __name__ == "__main__":
-    with open("input.txt", "r") as f:
+    with open("small_input.txt", "r") as f:
         raw = f.read().strip()
     binary = ""
     for c in raw:
         binary += format(int(c,16), "04b")
 
-    part_one(binary)
-    # part_two(binary)
+    # part_one(binary)
+    part_two(binary)
     
 
 
