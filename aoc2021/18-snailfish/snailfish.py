@@ -5,6 +5,13 @@ class Pair:
     def __init__(self, a, b):
         self.a = a
         self.b = b
+    def copy(self):
+        result = Pair(self.a, self.b)
+        if type(self.a) is Pair:
+            result.a = self.a.copy()
+        if type(self.b) is Pair:
+            result.b = self.b.copy()
+        return result
     def __getitem__(self, index):
         if index == 0:
             return self.a
@@ -191,6 +198,21 @@ def part_one(numbers):
     print(mag)
 
 
+def part_two(numbers):
+    max_mag = -1
+    for i, original_n1 in enumerate(numbers):
+        for j, original_n2 in enumerate(numbers):
+            if i == j:
+                continue
+            n1 = original_n1.copy()
+            n2 = original_n2.copy()
+            sum = snailfish_add(n1, n2)
+            mag = magnitude(sum)
+            if mag > max_mag:
+                 max_mag = mag
+    print(max_mag)
+
+
 def parse_line(line):
     lhs = deque()
     stack = deque()
@@ -217,5 +239,6 @@ if __name__ == "__main__":
                 break
             numbers.append(parse_line(line))
  
-    part_one(numbers)
+    # part_one(numbers)
+    part_two(numbers)
 
