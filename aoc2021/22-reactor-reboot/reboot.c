@@ -2,12 +2,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <string.h>
 #include <stdbool.h>
 
-#define MAX_CUBOIDS 2048
+#define MAX_CUBOIDS 65536
 #define MAX(a,b) (a > b ? a : b)
 #define MIN(a,b) (a < b ? a : b)
+
+/*      UINT64_MAX 18446744073709551615ULL */
+#define P10_UINT64 10000000000000000000ULL   /* 19 zeroes */
+#define E10_UINT64 19
+
+#define STRINGIZER(x)   # x
+#define TO_STRING(x)    STRINGIZER(x)
+
+
+typedef unsigned __int128 uint128_t; 
 
 typedef struct  {
     int min, max;
@@ -18,10 +29,16 @@ typedef struct  {
     Range x, y, z;
 } Cuboid;
 
+void print_cuboid(Cuboid *c) {
+    printf("x=%d..%d, y=%d..%d, z=%d..%d\n",
+        c->x.min, c->x.max,
+        c->y.min, c->y.max,
+        c->z.min, c->z.max);
+}
+
 void part_one_naive(Cuboid steps[], int step_count) {
     static int grid[101][101][101] = {0};
 
-    /*for (int i=0; i<2; ++i) {*/
     for (int i=0; i<step_count; ++i) {
         Cuboid step = steps[i];
         for (int x=MAX(step.x.min, -50); x<=MIN(step.x.max, 50); ++x)
@@ -39,6 +56,23 @@ void part_one_naive(Cuboid steps[], int step_count) {
     printf("After initialization procedure %d cubes are turned on\n", count);
 }
 
+/* 
+ * from user Jonathan Leffler
+ * https://stackoverflow.com/questions/11656241/how-to-print-uint128-t-number-using-gcc
+ */
+static int print_u128(uint128_t u128) {
+    int rc;
+    if (u128 > UINT64_MAX) {
+        uint128_t leading  = u128 / P10_UINT64;
+        uint64_t  trailing = u128 % P10_UINT64;
+        rc = print_u128(leading);
+        rc += printf("%." TO_STRING(E10_UINT64) PRIu64, trailing);
+    } else {
+        uint64_t u64 = u128;
+        rc = printf("%" PRIu64, u64);
+    }
+    return rc;
+}
 
 bool cuboids_intersect(Cuboid a, Cuboid b, Cuboid *intersection) {
     intersection->x.min = MAX(a.x.min, b.x.min);
@@ -53,62 +87,82 @@ bool cuboids_intersect(Cuboid a, Cuboid b, Cuboid *intersection) {
             intersection->z.min <= intersection->z.max);
 }
 
-
-
-/* NOTE(shaw): for a first attempt, just doing a very simple split on all axes,
- * so potentially 27 new cuboids whenever a cuboid is split 
- * 
- * If this ends up not being sufficient, could try doing something smarter like
- * handling each specific case of where the intersection is to split the cuboid
- * into as few parts as necessary */
-void split_cuboid_on_intersection(Cuboid cuboid, Cuboid intersection, Cuboid split[27]) {
-    Range x_split[3] = {
-        { .min = cuboid.x.min,       .max = intersection.x.min-1 },
-        { .min = intersection.x.min, .max = intersection.x.max },
-        { .min = intersection.x.max+1, .max = cuboid.x.max }
+void split_cuboid_on_intersection(Cuboid cuboid, Cuboid intersection, 
+                                  Cuboid split[6], int *split_count) 
+{
+    /* left and right are over full y and z range of cuboid */
+    Cuboid left = {
+        .on = true,
+        .x = {.min = cuboid.x.min, .max = intersection.x.min-1},
+        .y = {.min = cuboid.y.min, .max = cuboid.y.max},
+        .z = {.min = cuboid.z.min, .max = cuboid.z.max}
     };
-    Range y_split[3] = {
-        { .min = cuboid.y.min,       .max = intersection.y.min-1 },
-        { .min = intersection.y.min, .max = intersection.y.max },
-        { .min = intersection.y.max+1, .max = cuboid.y.max }
+    Cuboid right = {
+        .on = true,
+        .x = {.min = intersection.x.max+1, .max = cuboid.x.max},
+        .y = {.min = cuboid.y.min, .max = cuboid.y.max},
+        .z = {.min = cuboid.z.min, .max = cuboid.z.max}
     };
-    Range z_split[3] = {
-        { .min = cuboid.z.min,       .max = intersection.z.min-1 },
-        { .min = intersection.z.min, .max = intersection.z.max },
-        { .min = intersection.z.max+1, .max = cuboid.z.max }
+
+    /* top and bottom are over full z range of cuboid, but only x over range of intersection */
+    Cuboid top = {
+        .on = true,
+        .x = {.min = intersection.x.min, .max = intersection.x.max},
+        .y = {.min = intersection.y.max+1, .max = cuboid.y.max},
+        .z = {.min = cuboid.z.min, .max = cuboid.z.max}
+    };
+    Cuboid bottom = {
+        .on = true,
+        .x = {.min = intersection.x.min, .max = intersection.x.max},
+        .y = {.min = cuboid.y.min, .max = intersection.y.min-1},
+        .z = {.min = cuboid.z.min, .max = cuboid.z.max}
+    };
+
+    /* front and back are only over x and y range of intersection */
+    Cuboid front = {
+        .on = true,
+        .x = {.min = intersection.x.min, .max = intersection.x.max},
+        .y = {.min = intersection.y.min, .max = intersection.y.max},
+        .z = {.min = intersection.z.max+1, .max = cuboid.z.max}
+    };
+    Cuboid back = {
+        .on = true,
+        .x = {.min = intersection.x.min, .max = intersection.x.max},
+        .y = {.min = intersection.y.min, .max = intersection.y.max},
+        .z = {.min = cuboid.z.min, .max = intersection.z.min-1}
     };
 
     int split_index = 0;
 
-    for (int i=0; i<3; ++i)
-    for (int j=0; j<3; ++j)
-    for (int k=0; k<3; ++k)
-        split[split_index++] = (Cuboid){
-            .on = cuboid.on,
-            .x  = x_split[i],
-            .y  = y_split[j],
-            .z  = z_split[k]
-        };
+    if (left.x.min <= left.x.max)
+        split[split_index++] = left;
+    if (right.x.min <= right.x.max)
+        split[split_index++] = right;
+    if (top.y.min <= top.y.max)
+        split[split_index++] = top;
+    if (bottom.y.min <= bottom.y.max)
+        split[split_index++] = bottom;
+    if (front.z.min <= front.z.max)
+        split[split_index++] = front;
+    if (back.z.min <= back.z.max)
+        split[split_index++] = back;
+
+    *split_count = split_index;
 }
 
 
 void part_two(Cuboid steps[], int step_count) {
-    /*Cuboid on_cuboids[step_count];*/
     Cuboid *on_cuboids = calloc(MAX_CUBOIDS, sizeof(Cuboid));
 
     memset(on_cuboids, 0, step_count * sizeof(Cuboid));
-    int on_cuboids_count = 0;
+    uint128_t on_cuboids_count = 0;
 
-    /*Cuboid cuboids_to_add[MAX_CUBOIDS];*/
     Cuboid *cuboids_to_add = malloc(MAX_CUBOIDS * sizeof(Cuboid));
-    int cuboids_to_add_count;
+    uint128_t cuboids_to_add_count;
 
-    /*int cuboids_to_remove[MAX_CUBOIDS];*/
-    int *cuboids_to_remove = malloc(MAX_CUBOIDS * sizeof(int));
-    int cuboids_to_remove_count;
+    uint128_t cuboids_to_remove_count;
 
     for (int step_i=0; step_i<step_count; ++step_i) {
-    /*for (int i=0; i<2; ++i) {*/
         Cuboid step = steps[step_i];
         bool found_intersection = false;
         cuboids_to_add_count = 0;
@@ -122,57 +176,40 @@ void part_two(Cuboid steps[], int step_count) {
                 found_intersection = true;
 
                 /* split other into new parts */    
-                Cuboid other_split[27];
-                split_cuboid_on_intersection(other, intersection, other_split);
+                Cuboid other_split[6];
+                int split_count;
+                split_cuboid_on_intersection(other, intersection, other_split, &split_count);
 
                 /* add the new non-overlapping cuboids from other to on_cuboids */
-                /*APPEND_NON_INTERSECTING_TO_ADD(other_split, intersection);*/
-                for (int k=0; k<27; ++k) {
-                    Cuboid c = other_split[k];
-                    if (c.x.min <= c.x.max && c.y.min <= c.y.max && c.z.min <= c.z.max &&
-                        !(c.x.min == intersection.x.min && c.x.max == intersection.x.max && 
-                          c.y.min == intersection.y.min && c.y.max == intersection.y.max && 
-                          c.z.min == intersection.z.min && c.z.max == intersection.z.max))
-                    {
-                        assert(cuboids_to_add_count < MAX_CUBOIDS);
-                        cuboids_to_add[cuboids_to_add_count++] = c;
-                    }
+                for (int k=0; k<split_count; ++k) {
+                    assert(cuboids_to_add_count < MAX_CUBOIDS);
+                    cuboids_to_add[cuboids_to_add_count++] = other_split[k];
                 }
 
                 /* remove other from on_cuboids */
-                assert(cuboids_to_remove_count < MAX_CUBOIDS);
-                cuboids_to_remove[cuboids_to_remove_count++] = j;
-
-                if (step.on) {
-                    /* split step into new parts */
-                    Cuboid step_split[27];
-                    split_cuboid_on_intersection(step, intersection, step_split);
-                    /* add the new non-overlapping cuboids from step to on_cuboids */
-                    for (int k=0; k<27; ++k) {
-                        Cuboid c = step_split[k];
-                        if (c.x.min <= c.x.max && c.y.min <= c.y.max && c.z.min <= c.z.max &&
-                                !(c.x.min == intersection.x.min && c.x.max == intersection.x.max && 
-                                    c.y.min == intersection.y.min && c.y.max == intersection.y.max && 
-                                    c.z.min == intersection.z.min && c.z.max == intersection.z.max))
-                        {
-                            assert(cuboids_to_add_count < MAX_CUBOIDS);
-                            cuboids_to_add[cuboids_to_add_count++] = c;
-                        }
-                    }
-
-                    /* add the 1 overlapping cuboid to on_cuboids */
-                    assert(cuboids_to_add_count < MAX_CUBOIDS);
-                    cuboids_to_add[cuboids_to_add_count++] = intersection;
-                } 
+                on_cuboids[j].on = false;
+                ++cuboids_to_remove_count;
             }
         }
 
         if (found_intersection) {
             /* remove cuboids */
-            for (int i=0; i<cuboids_to_remove_count; ++i) {
-                int index_to_remove = cuboids_to_remove[i];
-                on_cuboids[index_to_remove] = on_cuboids[--on_cuboids_count];
+            int left = 0;
+            int right = on_cuboids_count-1;
+            while (left <= right) {
+                if (on_cuboids[left].on) {
+                    ++left;
+                    continue;
+                }
+
+                if (!on_cuboids[right].on) {
+                    --right;
+                    continue;
+                }
+
+                on_cuboids[left++] = on_cuboids[right--];
             }
+            on_cuboids_count -= cuboids_to_remove_count;
 
             /* add new cuboids */
             for (int i=0; i<cuboids_to_add_count; ++i) {
@@ -180,31 +217,28 @@ void part_two(Cuboid steps[], int step_count) {
                 on_cuboids[on_cuboids_count++] = cuboids_to_add[i];
             }
 
-        } else {
-            /* no overlapping regions, just add step to on_cuboids */
-            assert(on_cuboids_count < MAX_CUBOIDS);
-            on_cuboids[on_cuboids_count++] = step;
         }
+
+        /* add new step */
+        if (step.on) {
+            assert(cuboids_to_add_count < MAX_CUBOIDS);
+            on_cuboids[on_cuboids_count++] = step;
+        } 
     }
 
-    printf("Found %d cuboids\n", on_cuboids_count);
-    uint64_t count = 0;
+    uint128_t count = 0;
     for (int i=0; i<on_cuboids_count; ++i) {
         Cuboid c = on_cuboids[i];
-        /*printf("x=%d..%d, y=%d..%d, z=%d..%d\n",*/
-            /*c.x.min, c.x.max,*/
-            /*c.y.min, c.y.max,*/
-            /*c.z.min, c.z.max);*/
-        count += (c.x.max+1 - c.x.min) * (c.y.max+1 - c.y.min) * (c.z.max+1 - c.z.min);
+        count += (uint128_t)(c.x.max+1 - c.x.min) * (c.y.max+1 - c.y.min) * (c.z.max+1 - c.z.min);
     }
 
-    printf("After reboot sequence %lu cubes are turned on\n", count);
+    printf("After reboot sequence "); 
+    print_u128(count);
+    printf(" cubes are turned on\n");
 
-
-     free(cuboids_to_add);
-     free(cuboids_to_remove);
-
+    free(cuboids_to_add);
 }
+
 
 int main(void) {
     int step_count = 0;
@@ -213,13 +247,11 @@ int main(void) {
     size_t len = 0;
     ssize_t nread;
 
-    FILE *fp = fopen("small_input.txt", "r");
+    FILE *fp = fopen("input.txt", "r");
 
     /* pass one, get step count */
     while ((nread = getline(&line, &len, fp)) != -1)
         ++step_count;        
-
-    printf("found %d steps\n", step_count);
 
     /* pass two, get cuboids */
     Cuboid steps[step_count];
@@ -229,8 +261,7 @@ int main(void) {
 
     int i = 0;
     while ((nread = getline(&line, &len, fp)) != -1) {
-       if (strstr(line, "on"))
-           steps[i].on = true;
+        steps[i].on = strstr(line, "on") ? 1 : 0;
 
         char *cursor = index(line, 'x');
         sscanf(cursor, "x=%d..%d,y=%d..%d,z=%d..%d", 
@@ -248,3 +279,4 @@ int main(void) {
 
     return 0;
 }
+
