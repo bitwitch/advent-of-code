@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -6,30 +7,104 @@
 #include "../base/base_inc.h"
 #include "../base/base_inc.c"
 
+int get_priority(char c) {
+    /* Lowercase item types a through z have priorities 1 through 26.
+     * Uppercase item types A through Z have priorities 27 through 52. */
+    return (c >= 97 && c <= 122) ? c - 96 : c - 38;
+}
+
+char find_duplicate(char *rucksack) {
+    uint64_t seen_one = 0;
+    uint64_t seen_two = 0;
+
+    int comp_size  = strlen(rucksack)/2;
+    char *comp_one = rucksack;
+    char *comp_two = comp_one + comp_size;
+
+    int i, bit_index;
+
+    for (i=0; i<comp_size; ++i) {
+        // next item in compartment one
+        bit_index = get_priority(*comp_one) - 1;
+        if (seen_two & ((uint64_t)1 << bit_index)) {
+            return *comp_one;
+        }
+        seen_one |= (uint64_t)1 << bit_index;
+        ++comp_one;
+
+        // next item in compartment two
+        bit_index = get_priority(*comp_two) - 1;
+        if (seen_one & ((uint64_t)1 << bit_index)) {
+            return *comp_two;
+        }
+        seen_two |= (uint64_t)1 << bit_index;
+        ++comp_two;
+    }
+
+    assert(0 && "rucksack supplied to find_duplicate must contain a single duplicate");
+    return 0;
+}
+
+int group_badge_priority(char *line0, char *line1, char *line2) {
+    uint64_t seen0 = 0, 
+             seen1 = 0, 
+             seen2 = 0;
+
+    int i;
+    int bit_index;
+
+    /* store bitmask of items in each rucksack */
+    for (i=0; i<strlen(line0); ++i) {
+        bit_index = get_priority(line0[i]) - 1;
+        seen0 |= (uint64_t)1 << bit_index;
+    }
+    for (i=0; i<strlen(line1); ++i) {
+        bit_index = get_priority(line1[i]) - 1;
+        seen1 |= (uint64_t)1 << bit_index;
+    }
+    for (i=0; i<strlen(line2); ++i) {
+        bit_index = get_priority(line2[i]) - 1;
+        seen2 |= (uint64_t)1 << bit_index;
+    }
+
+    /* find the one item all three rucksacks have in common */
+    for (bit_index = 0; bit_index < 64; ++bit_index) {
+        if (((seen0 & seen1 & seen2) >> bit_index) & 1)
+            return bit_index + 1;
+    }
+
+    assert(0 && "the three rucksacks must all have one single item in common");
+    return 0;
+}
 
 void part_one(uint8_t *input) {
-    /*
-     * Lowercase item types a through z have priorities 1 through 26.
-     * Uppercase item types A through Z have priorities 27 through 52.
-     */
-     /*uint64_t seen = 0;*/
-
+    uint64_t sum = 0;
     char *line;
     int i;
 
-    for (i = 0; *line != '\0'; ++i) {
+    do {
         line = arb_chop_by_delimiter((char**)&input, "\n");
-        if (*line != '\0')
-            printf("line %d: %s\n", i, line);
-    } 
+        char duplicate = find_duplicate(line);
+        sum += get_priority(duplicate);
+    } while (*input != '\0');
 
-
-    printf("part_one: %d\n", 69);
-
+    printf("part_one: %d\n", sum);
 }
 
 void part_two(uint8_t *input) {
-    printf("part_two: %d\n", 69);
+    uint8_t *remaining = input;
+    uint64_t sum = 0;
+    char *line0, *line1, *line2;
+    int i;
+
+    do {
+        line0 = arb_chop_by_delimiter((char**)&input, "\n");
+        line1 = arb_chop_by_delimiter((char**)&input, "\n");
+        line2 = arb_chop_by_delimiter((char**)&input, "\n");
+        sum += group_badge_priority(line0, line1, line2);
+    } while (*input != '\0');
+
+    printf("part_two: %d\n", sum);
 }
 
 
@@ -41,7 +116,7 @@ int main(int argc, char **argv) {
     }
 
     FILE *fp;
-    uint8_t *file_data;
+    uint8_t *file_data, *file_copy;
     size_t file_size;
 
     fp = fopen(argv[1], "r");
@@ -56,7 +131,12 @@ int main(int argc, char **argv) {
 
     fclose(fp);
 
-    part_one(file_data);
+    file_copy = malloc(file_size);
+    if (!file_copy) { perror("malloc"); exit(1); }
+
+    memcpy(file_copy, file_data, file_size);
+
+    part_one(file_copy);
     part_two(file_data);
 
     return 0;
