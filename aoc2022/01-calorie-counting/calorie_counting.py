@@ -1,9 +1,3 @@
-def part_one():
-    pass
-
-def part_two():
-    pass
-
 if __name__ == "__main__":
     counts = []
 
@@ -24,20 +18,13 @@ if __name__ == "__main__":
                 end = True
                 continue
             end = False
-
-            print(line)
             count += int(line)
             
-    print(max)
+    print(f"part_one: {max}")
 
+    sum = 0
+    for c in sorted(counts)[-3:]:
+        sum += c
 
-
-    print(sorted(counts))
-
-    result_one = part_one()
-    print(f"part one: {result_one}")
-
-
-    result_two = part_two()
-    print(f"part two: {result_two}")
+    print(f"part_two: {sum}")
 
