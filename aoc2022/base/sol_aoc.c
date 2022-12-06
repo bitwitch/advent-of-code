@@ -448,11 +448,9 @@ void drawcharn(int aChar, int aX, int aY, int n, int aColor)
 
 void drawstringn(const char* aString, int aX, int aY, int n, int aColor)
 {
-    if (aY + 12*n > 1024)
-        return;
+    if (aY + 12*n > 1024) return;
 
-	while (*aString)
-	{
+	while (*aString) {
 		drawcharn(*aString, aX, aY, n, aColor);
 		aX += 8*n;
 		if (aX + 8*n > 1024)
@@ -482,7 +480,7 @@ int isprime(long long val)
 char* load(const char* fname, int* len)
 {
 	int l;
-	FILE* f;
+	FILE* f = NULL;
 	fopen(fname, "rb");
 
 	if (f == NULL)

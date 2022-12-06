@@ -7,16 +7,36 @@
 #include "../base/base_inc.h"
 #include "../base/base_inc.c"
 
-int get_priority(char c) {
-    /* Lowercase item types a through z have priorities 1 through 26.
-     * Uppercase item types A through Z have priorities 27 through 52. */
-    return (c >= 97 && c <= 122) ? c - 96 : c - 38;
-}
+/*
+#define MAX_ROWS 10
+
+typedef enum {
+    DRAW_TYPE_STRINGF = 0,
+    DRAW_TYPE_RECT,
+    DRAW_TYPE_COUNT
+} Draw_Type;
+
+typedef struct {
+    Draw_Type type;
+    int x, y, scale;
+    char item;
+} Draw_Call;
+
+
+Draw_Call draw_calls[MAX_ROWS];
+size_t draw_call_count = 0;
+*/
 
 typedef struct {
     int indices[32];
     int count;
 } Matches;
+
+void emphasize_matches(Matches matches, int x_off, int y, int scale, char item, uint32_t color) {
+    for (int i=0; i<matches.count; ++i) {
+        drawstringf(18*matches.indices[i] + x_off, y, scale, color, "%c", item);
+    }
+}
 
 void visualize_part_one(char *rucksack, char item) {
     static int y = 10, scale = 2;
@@ -29,16 +49,18 @@ void visualize_part_one(char *rucksack, char item) {
 
     bool found_one = false;
     bool found_two = false;
+
     int comp_size  = strlen(rucksack)/2;
     char *comp_one = rucksack;
     char *comp_two = comp_one + comp_size;
     /*int comp_offset = 18 * (comp_size+1);*/
     int comp_offset = 18 * 23;
-    int i, j;
-    uint32_t color, color_one, color_two;
+
+    int i;
+    uint32_t color_one, color_two;
 
     int chars_per_frame = 2;
-    int c;
+    int c = 0;
 
     for (i=0; i<comp_size; ++i) {
 
@@ -61,11 +83,27 @@ void visualize_part_one(char *rucksack, char item) {
         x += 18;
 
         if (found_one && found_two) {
-            for (j=0; j<matches_one.count; ++j)
-                drawstringf(18*matches_one.indices[j] + 10, y, scale, 0x00ff00, "%c", item); 
-            for (j=0; j<matches_two.count; ++j)
-                drawstringf(18*matches_two.indices[j] + comp_offset + 10, y, scale, 0x00ff00, "%c", item); 
+            emphasize_matches(matches_one, 10, y, scale, item, 0x00ff00);
+            emphasize_matches(matches_two, comp_offset+10, y, scale, item, 0x00ff00);
             nextframe(0);
+
+            emphasize_matches(matches_one, 10, y, scale, item, 0x00ffff);
+            emphasize_matches(matches_two, comp_offset+10, y, scale, item, 0x00ffff);
+            nextframe(0);
+
+            emphasize_matches(matches_one, 10, y, scale, item, 0xffffff);
+            emphasize_matches(matches_two, comp_offset+10, y, scale, item, 0xffffff);
+            nextframe(0);
+
+            emphasize_matches(matches_one, 10, y, scale, item, 0x00ffff);
+            emphasize_matches(matches_two, comp_offset+10, y, scale, item, 0x00ffff);
+            nextframe(0);
+
+            emphasize_matches(matches_one, 10, y, scale, item, 0x00ff00);
+            emphasize_matches(matches_two, comp_offset+10, y, scale, item, 0x00ff00);
+            nextframe(0);
+
+
             break;
         }
 
@@ -74,6 +112,12 @@ void visualize_part_one(char *rucksack, char item) {
             nextframe(0);
     }
     y += 25;
+}
+
+int get_priority(char c) {
+    /* Lowercase item types a through z have priorities 1 through 26.
+     * Uppercase item types A through Z have priorities 27 through 52. */
+    return (c >= 97 && c <= 122) ? c - 96 : c - 38;
 }
 
 char find_duplicate(char *rucksack) {
@@ -146,7 +190,6 @@ void part_one(uint8_t *input) {
 
     uint64_t sum = 0;
     char *line;
-    int i;
 
     do {
         line = arb_chop_by_delimiter((char**)&input, "\n");
@@ -155,17 +198,15 @@ void part_one(uint8_t *input) {
         sum += get_priority(duplicate);
     } while (*input != '\0');
 
-    printf("part_one: %d\n", sum);
+    printf("part_one: %lu\n", sum);
 
 
     endgif();
 }
 
 void part_two(uint8_t *input) {
-    uint8_t *remaining = input;
     uint64_t sum = 0;
     char *line0, *line1, *line2;
-    int i;
 
     do {
         line0 = arb_chop_by_delimiter((char**)&input, "\n");
@@ -174,7 +215,7 @@ void part_two(uint8_t *input) {
         sum += group_badge_priority(line0, line1, line2);
     } while (*input != '\0');
 
-    printf("part_two: %d\n", sum);
+    printf("part_two: %lu\n", sum);
 }
 
 

@@ -1,4 +1,4 @@
 .PHONY: rucksack
 
 rucksack: 
-	gcc -g -Og -o rucksack rucksack.c -lm
+	gcc -g -Og -Wall -pedantic -o rucksack rucksack.c -lm
