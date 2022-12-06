@@ -1,7 +1,7 @@
 # Advent of Code
 
-[Advent of Code](https://adventofcode.com) is an Advent calendar of programming puzzles. The puzzles
-generally increase in difficulty each day. It is a lot of fun.
+[Advent of Code](https://adventofcode.com) is an Advent calendar of programming puzzles. The puzzles  
+generally increase in difficulty each day. It is a lot of fun.  
 
 ### Visualizations
 
