@@ -94,6 +94,18 @@ void visualize_part_one(char *rucksack, char item) {
     y += 25;
 }
 
+
+void bit_mask_row(uint64_t mask, int x, int y, int side, uint32_t color_off, uint32_t color_on) {
+    int left;
+    uint32_t color;
+
+    for (int i=0; i<52; ++i) {
+        left = x + i*side + 1;
+        color = (mask >> i) & 1 ? color_on : color_off;
+        drawrect(left, y, left+side, y+side, color);
+    }
+}
+
 int get_priority(char c) {
     /* Lowercase item types a through z have priorities 1 through 26.
      * Uppercase item types A through Z have priorities 27 through 52. */
@@ -138,7 +150,8 @@ int group_badge_priority(char *line0, char *line1, char *line2) {
              seen2 = 0;
 
     int i;
-    int bit_index;
+    int bit_index, common_bit = 0;
+    static int y = 0;
 
     /* store bitmask of items in each rucksack */
     for (i=0; i<strlen(line0); ++i) {
@@ -156,18 +169,51 @@ int group_badge_priority(char *line0, char *line1, char *line2) {
 
     /* find the one item all three rucksacks have in common */
     for (bit_index = 0; bit_index < 64; ++bit_index) {
-        if (((seen0 & seen1 & seen2) >> bit_index) & 1)
-            return bit_index + 1;
+        if (((seen0 & seen1 & seen2) >> bit_index) & 1) {
+            common_bit = bit_index;
+        }
     }
 
-    assert(0 && "the three rucksacks must all have one single item in common");
-    return 0;
+    // draw bit masks as row of rectangles
+    int side = 18;
+    int margin_left = 10;
+    int x_emphasize = margin_left + common_bit*side + 1;
+    int y0, y1, y2;
+
+    bit_mask_row(seen0, margin_left, y, side, 0x000000, 0xFFFFFF);
+    y0 = y;
+    y += side;
+    nextframe(0);
+
+    bit_mask_row(seen1, margin_left, y, side, 0x000000, 0xFFFFFF);
+    y1 = y;
+    y += side;
+    nextframe(0);
+
+    bit_mask_row(seen2, margin_left, y, side, 0x000000, 0xFFFFFF);
+    y2 = y;
+    y += side;
+    nextframe(0);
+
+    // emphasize common bit in each row
+    drawrect(x_emphasize, y0, x_emphasize+side, y0+side, 0x00FF00);
+    drawrect(x_emphasize, y1, x_emphasize+side, y1+side, 0x00FF00);
+    drawrect(x_emphasize, y2, x_emphasize+side, y2+side, 0x00FF00);
+    nextframe(0);
+    drawrect(x_emphasize, y0, x_emphasize+side, y0+side, 0x00FFFF);
+    drawrect(x_emphasize, y1, x_emphasize+side, y1+side, 0x00FFFF);
+    drawrect(x_emphasize, y2, x_emphasize+side, y2+side, 0x00FFFF);
+    nextframe(0);
+    drawrect(x_emphasize, y0, x_emphasize+side, y0+side, 0x00FF00);
+    drawrect(x_emphasize, y1, x_emphasize+side, y1+side, 0x00FF00);
+    drawrect(x_emphasize, y2, x_emphasize+side, y2+side, 0x00FF00);
+    nextframe(0);
+
+    return common_bit + 1;
 }
 
 void part_one(uint8_t *input) {
-    setupgif(0, 2, "rucksack.gif");
     clear();
-
     uint64_t sum = 0;
     char *line;
 
@@ -179,12 +225,10 @@ void part_one(uint8_t *input) {
     } while (*input != '\0');
 
     printf("part_one: %lu\n", sum);
-
-
-    endgif();
 }
 
 void part_two(uint8_t *input) {
+    clear();
     uint64_t sum = 0;
     char *line0, *line1, *line2;
 
@@ -227,8 +271,13 @@ int main(int argc, char **argv) {
 
     memcpy(file_copy, file_data, file_size);
 
+
+    setupgif(0, 2, "rucksack.gif");
+
     part_one(file_copy);
     part_two(file_data);
+
+    endgif();
 
     return 0;
 }
