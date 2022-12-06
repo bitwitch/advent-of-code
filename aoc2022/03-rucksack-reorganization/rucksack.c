@@ -13,6 +13,69 @@ int get_priority(char c) {
     return (c >= 97 && c <= 122) ? c - 96 : c - 38;
 }
 
+typedef struct {
+    int indices[32];
+    int count;
+} Matches;
+
+void visualize_part_one(char *rucksack, char item) {
+    static int y = 10, scale = 2;
+    int x = 10;
+
+    if (y > 1024) return;
+
+    Matches matches_one = {0};
+    Matches matches_two = {0};
+
+    bool found_one = false;
+    bool found_two = false;
+    int comp_size  = strlen(rucksack)/2;
+    char *comp_one = rucksack;
+    char *comp_two = comp_one + comp_size;
+    /*int comp_offset = 18 * (comp_size+1);*/
+    int comp_offset = 18 * 23;
+    int i, j;
+    uint32_t color, color_one, color_two;
+
+    int chars_per_frame = 2;
+    int c;
+
+    for (i=0; i<comp_size; ++i) {
+
+        if (x > 1024) continue;
+
+        color_one = color_two = 0xFFFFFF;
+        if (comp_one[i] == item) {
+            matches_one.indices[matches_one.count++] = i;
+            if (found_two) color_one = 0x00FF00;
+            found_one = true;
+        }
+        if (comp_two[i] == item) {
+            matches_two.indices[matches_two.count++] = i;
+            if (found_one) color_two = 0x00FF00;
+            found_two = true;
+        }
+ 
+        drawstringf(x, y, scale, color_one, "%c", comp_one[i]); 
+        drawstringf(x+comp_offset, y, scale, color_two, "%c", comp_two[i]); 
+        x += 18;
+
+        if (found_one && found_two) {
+            for (j=0; j<matches_one.count; ++j)
+                drawstringf(18*matches_one.indices[j] + 10, y, scale, 0x00ff00, "%c", item); 
+            for (j=0; j<matches_two.count; ++j)
+                drawstringf(18*matches_two.indices[j] + comp_offset + 10, y, scale, 0x00ff00, "%c", item); 
+            nextframe(0);
+            break;
+        }
+
+        ++c;
+        if (c % chars_per_frame == 0)
+            nextframe(0);
+    }
+    y += 25;
+}
+
 char find_duplicate(char *rucksack) {
     uint64_t seen_one = 0;
     uint64_t seen_two = 0;
@@ -42,7 +105,7 @@ char find_duplicate(char *rucksack) {
     }
 
     assert(0 && "rucksack supplied to find_duplicate must contain a single duplicate");
-    return 0;
+    return '\0';
 }
 
 int group_badge_priority(char *line0, char *line1, char *line2) {
@@ -78,6 +141,9 @@ int group_badge_priority(char *line0, char *line1, char *line2) {
 }
 
 void part_one(uint8_t *input) {
+    setupgif(0, 2, "rucksack.gif");
+    clear();
+
     uint64_t sum = 0;
     char *line;
     int i;
@@ -85,10 +151,14 @@ void part_one(uint8_t *input) {
     do {
         line = arb_chop_by_delimiter((char**)&input, "\n");
         char duplicate = find_duplicate(line);
+        visualize_part_one(line, duplicate);
         sum += get_priority(duplicate);
     } while (*input != '\0');
 
     printf("part_one: %d\n", sum);
+
+
+    endgif();
 }
 
 void part_two(uint8_t *input) {
