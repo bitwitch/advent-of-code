@@ -7,26 +7,6 @@
 #include "../base/base_inc.h"
 #include "../base/base_inc.c"
 
-/*
-#define MAX_ROWS 10
-
-typedef enum {
-    DRAW_TYPE_STRINGF = 0,
-    DRAW_TYPE_RECT,
-    DRAW_TYPE_COUNT
-} Draw_Type;
-
-typedef struct {
-    Draw_Type type;
-    int x, y, scale;
-    char item;
-} Draw_Call;
-
-
-Draw_Call draw_calls[MAX_ROWS];
-size_t draw_call_count = 0;
-*/
-
 typedef struct {
     int indices[32];
     int count;
