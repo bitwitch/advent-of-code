@@ -1,2 +1,2 @@
 #### Day 9 - Smoke Basin
-![gif](https://i.imgur.com/3Dgc6ZG.gif)  
+![day 9 visualization](https://i.imgur.com/3Dgc6ZG.gif)  

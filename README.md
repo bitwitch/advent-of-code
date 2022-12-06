@@ -12,4 +12,4 @@ generally increase in difficulty each day. It is a lot of fun.
 ![2021 day 13 visualization](aoc2021/13-transparent-origami/out.png)  
 
 #### 2022 Day 3: Rucksack Reorganization  
-![2022 day 3 visualization](https://i.imgur.com/EiWAs4u.gif)  
+![2022 day 3 visualization](https://i.imgur.com/RlHYuct.gif)  
