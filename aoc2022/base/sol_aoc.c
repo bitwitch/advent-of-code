@@ -73,6 +73,23 @@ void endgif()
 	GifEnd(&gifwriter);
 }
 
+void strokerect(int x0, int y0, int x1, int y1, int stroke_width, unsigned int color) {
+ 	if (x0 > x1) { int t = x0; x0 = x1; x1 = t; }
+	if (y0 > y1) { int t = y0; y0 = y1; y1 = t; }
+	if (x0 < 0) x0 = 0;
+	if (x1 > 1024) x1 = 1024;
+	if (y0 < 0) y0 = 0;
+	if (y1 > 1024) y1 = 1024;
+
+    int h = y1 - y0;
+    int w = x1 - x0;
+
+    drawline(x0, y0, x0 + w, y0, stroke_width, color);          // top
+    drawline(x0, y0 + h, x0 + w, y0 + h, stroke_width, color);  // bottom
+    drawline(x0, y0, x0, y0 + h, stroke_width, color);          // left
+    drawline(x0 + w, y0, x0 + w, y0 + h, stroke_width, color);  // right
+}
+
 void drawrect(int x0, int y0, int x1, int y1, unsigned int color)
 {
 	if (x0 > x1) { int t = x0; x0 = x1; x1 = t; }
@@ -81,6 +98,7 @@ void drawrect(int x0, int y0, int x1, int y1, unsigned int color)
 	if (x1 > 1024) x1 = 1024;
 	if (y0 < 0) y0 = 0;
 	if (y1 > 1024) y1 = 1024;
+
 	for (int i = y0; i < y1; i++)
 		for (int j = x0; j < x1; j++)
 			framebuffer[i * 1024 + j] = color;
