@@ -5,8 +5,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 ### Visualizations
 
-
-
 #### 2021 Day 9 - Smoke Basin  
 ![2021 day 9 visualization](https://i.imgur.com/3Dgc6ZG.gif)  
 
@@ -15,3 +13,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### 2022 Day 3: Rucksack Reorganization  
 ![2022 day 3 visualization](aoc2022/03-rucksack-reorganization/out.gif)  
+
+#### 2022 Day 4: Camp Cleanup
+![day 4 visualization](aoc2022/04-camp-cleanup/out.gif)
