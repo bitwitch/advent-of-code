@@ -1,3 +1,8 @@
+/* after generating a gif, i used gifsicle to optimize:
+ * gifsicle -d6 rucksack.gif -O3 -o out.gif --colors 16
+ *
+ * size went from 1.7MB to 115KB on my machine
+ */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
