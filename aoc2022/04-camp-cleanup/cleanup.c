@@ -61,12 +61,12 @@ void visualize_intervals_isolated(Interval a, Interval b) {
         va.y = half_dim - 2*unit;
         va.width = (a.hi - a.lo) * unit;
         va.x = (margin_left + a.lo - min_x) * unit;
-        va.color = 0xDDDDFF;
+        va.color = 0x00FF00;
 
         vb.y = half_dim + unit;
         vb.width = (b.hi - b.lo) * unit;
         vb.x = (margin_left + b.lo - min_x) * unit;
-        vb.color = 0xFFDDDD;
+        vb.color = 0x0000FF;
         
         /*drawrect(va.x, va.y, va.x+va.width, va.y+unit, va.color);*/
         /*drawline(ax, ay, va.x, va.y+unit, 2, 0x000000);*/
@@ -112,7 +112,7 @@ void visualize_intervals_isolated(Interval a, Interval b) {
 
 int cum_x, cum_y;
 void visualize_intervals_cummulative(Interval a, Interval b) {
-    local_persist int frames = 0;
+    
     int gif_width = 1024;
     int gif_height = 1024;
     int unit = 5;
@@ -152,8 +152,6 @@ void visualize_intervals_cummulative(Interval a, Interval b) {
         cum_x = (cum_x == 0) ? 100 : 0;
     }
 
-    if ((frames++ % 5) == 0)
-        nextframe(0);
 }
 
 void draw_first_n_pairs(Interval *intervals, int n) {
@@ -172,6 +170,9 @@ void draw_first_n_pairs(Interval *intervals, int n) {
 
 
 void part_two(Interval *intervals, int intervals_count) {
+    local_persist int frames = 0;
+    local_persist int speed = 1;
+
     int count = 0;
     int i;
     Interval a, b;
@@ -183,7 +184,7 @@ void part_two(Interval *intervals, int intervals_count) {
         b = intervals[i+1];
 
         if (i < pairs_show_isolated*2) {
-            /*visualize_intervals_isolated(a, b);*/
+            visualize_intervals_isolated(a, b);
         } else {
             if (i == pairs_show_isolated*2)
                 draw_first_n_pairs(intervals, pairs_show_isolated);
@@ -201,16 +202,30 @@ void part_two(Interval *intervals, int intervals_count) {
             if (i >= pairs_show_isolated*2) {
                 drawrect(512-35, 200, 512+65, 250, 0x000000);
                 drawstringf(512-30, 200, 4, 0xFFFFFF, "%d", count);
-                nextframe(0);
             }
         }
+
+        // speed up the animation exponentially
+        if (frames >  25) speed = 2;
+        if (frames >  50) speed = 6;
+        if (frames > 100) speed = 11;
+        if (frames > 200) speed = 17;
+        if (frames > 400) speed = 24;
+        if (frames > 600) speed = 32;
+        if (frames > 800) speed = 41;
+
+        if ((frames++ % speed) == 0)
+            nextframe(0);
     }
 
-    clear();
+    /*clear();*/
 
     // display final overlap count
     for (i=0; i<final_count_iterations; ++i) {
         drawstringf(512-30, 200, 4, 0xFFFFFF, "%d", count);
+        nextframe(0);
+        nextframe(0);
+        nextframe(0);
         nextframe(0);
     }
 
@@ -251,7 +266,7 @@ int main(int argc, char **argv) {
         
         // grow storage when needed
         if (used > size) {
-            size = (size == 0) ? 1 : size*2;
+            size = (size == 0) ? used : size*2;
             temp = realloc(intervals, size);
             if (!temp) { perror("realloc"); exit(1); }
             intervals = temp;

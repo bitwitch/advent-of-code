@@ -1,3 +1,4 @@
 prog
 *.ppm
-*.gif
+*.dSYM
+*.DS_Store
