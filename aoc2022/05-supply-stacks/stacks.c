@@ -33,6 +33,64 @@ void print_stacks(Node **stacks, size_t stack_count) {
     printf("\n");
 }
 
+U32 palette[26] = {
+    0xcd4a4a, 0xcc6666, 0xbc5d58, 0xff5349, 
+    0xfd5e53, 0xfd7c6e, 0xfdbcb4, 0xff6e4a,
+    0xffa089, 0xea7e5d, 0xb4674d, 0xa5694f,
+    0x9f8170, 0xcd9575, 0xefcdb8, 0xd68a59,
+    0xdeaa88, 0xfaa76c, 0xffcfab, 0xffbd88,
+    0xffcf48, 0xfce883, 0xf0e891, 0xeceabe,
+    0xc5e384, 0xb2ec5d
+};
+
+U32 rgb_to_bgr(U32 color) {
+    U32 r, g, b;
+    b = (color >>  0) & 0xFF;
+    g = (color >>  8) & 0xFF;
+    r = (color >> 16) & 0xFF;
+   return r | (g << 8) | (b << 16);
+}
+
+void draw_stacks(Node **stacks, size_t stack_count) {
+    Node *node;
+    size_t i, col;
+    int pad = 3;
+    int width = 15;
+    int height = 15;
+    int gif_height = 1024;
+    int gif_width = 1024;
+
+    // we want to draw the stack in reverse order, but since its a linked list
+    // we gotta get the height first so we know where to draw each crate
+    // this is dumb af but whatever
+    int heights[stack_count];
+    int h;
+    for (i=0; i<stack_count; ++i) {
+        h = 0;
+        node = stacks[i];
+        while (node) {
+            ++h;
+            node = node->next;
+        }
+        heights[i] = h;
+    }
+
+    for (i=0; i<stack_count; ++i) {
+        h = heights[i];
+        node = stacks[i];
+        col = 0;
+        while (node) {
+            drawbox(i*(width+pad) + gif_width/2 - ((width+pad)*stack_count)/2, 
+                    gif_height - ((h - col)*height), 
+                    width, height, 
+                    /*rgb_to_bgr(palette[node->data - 65]));*/
+                    palette[node->data - 65]);
+            ++col;
+            node = node->next;
+        }
+    }
+}
+
 void move_crate_from_to(Node **stacks, U32 src, U32 dest) {
     Node *mover = stacks[src];
     if (mover) {
@@ -50,11 +108,36 @@ Node *pop_crate(Node **stacks, U32 index) {
     return stack;
 }
 
+void push_crate(Node **stacks, U32 index, Node *crate) {
+    if (!crate) return;
+    Node *stack = stacks[index];
+    crate->next = stack;
+    stacks[index] = crate;
+}
+
+
 void part_one(Node **stacks, size_t stack_count, Instruction *instructions, size_t instruction_count) {
-    size_t i, j;
-    for (i=0; i<instruction_count; ++i)
-        for (j=0; j < instructions[i].count; ++j)
-            move_crate_from_to(stacks, instructions[i].src-1, instructions[i].dest-1);
+    size_t i, j, src, dest;
+    Node *crate;
+    for (i=0; i<instruction_count; ++i) {
+        src = instructions[i].src-1;
+        dest = instructions[i].dest-1;
+        for (j=0; j < instructions[i].count; ++j) {
+            crate = pop_crate(stacks, src);
+
+            clear();
+            draw_stacks(stacks, stack_count);
+            nextframe(0);
+
+            push_crate(stacks, dest, crate);
+
+            clear();
+            draw_stacks(stacks, stack_count);
+            nextframe(0);
+
+
+        }
+    }
 
     char result[256];
     j = 0;
@@ -214,8 +297,13 @@ int main(int argc, char **argv) {
     bool success = parse_input(file_data, file_size, &stacks, &stack_count, &instructions, &instruction_count);
     if (!success) { perror("parse_input"); exit(1); }
 
-    /*part_one(stacks, stack_count, instructions, instruction_count);*/
-    part_two(stacks, stack_count, instructions, instruction_count);
+
+    setupgif(0, 2, "stacks.gif");
+
+    part_one(stacks, stack_count, instructions, instruction_count);
+    /*part_two(stacks, stack_count, instructions, instruction_count);*/
+
+    endgif();
 
     return 0;
 }
