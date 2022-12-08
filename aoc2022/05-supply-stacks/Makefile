@@ -3,4 +3,4 @@ EXE := stacks
 .PHONY: $(EXE)
 
 $(EXE): 
-	gcc -g -Og -Wall -pedantic -o $(EXE) $(EXE).c -lm
+	gcc -g -Og -Wall -Wextra -pedantic -o $(EXE) $(EXE).c -lm
