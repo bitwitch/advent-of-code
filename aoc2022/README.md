@@ -7,3 +7,6 @@
 
 #### Day 4: Camp Cleanup
 ![day 4 visualization](04-camp-cleanup/out.gif)
+
+#### Day 5: Supply Stacks
+![day 4 visualization](05-supply-stacks/out.gif)

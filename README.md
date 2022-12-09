@@ -16,3 +16,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### 2022 Day 4: Camp Cleanup
 ![day 4 visualization](aoc2022/04-camp-cleanup/out.gif)
+
+#### 2022 Day 5: Supply Stacks
+![day 4 visualization](aoc2022/05-supply-stacks/out.gif)
