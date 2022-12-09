@@ -11,7 +11,7 @@
 unsigned int framebuffer[1024 * 1024];
 GifWriter gifwriter;
 unsigned int* framedata;
-int frames;
+int total_frames;
 int frameidx;
 uint32_t bitDepth = 8;
 bool dither = false;
@@ -20,11 +20,11 @@ uint32_t globalDelay;
 void setupgif(uint32_t delay, int motionblurframes, const char* fn)
 {
 	GifBegin(&gifwriter, fn, 512, 512, delay, bitDepth, dither);
-	frames = motionblurframes;
-    framedata = malloc(512 * 512 * frames * sizeof(unsigned int));
+	total_frames = motionblurframes;
+    framedata = malloc(512 * 512 * total_frames * sizeof(unsigned int));
 	frameidx = 0;
     globalDelay = delay;
-	memset(framedata, 0, 512 * 512 * frames * sizeof(int));
+	memset(framedata, 0, 512 * 512 * total_frames * sizeof(int));
 }
 
 unsigned int frame[512 * 512];
@@ -43,7 +43,7 @@ void nextframe(int ofs)
 		}
 	}
 
-	frameidx = (frameidx + 1) % frames;
+	frameidx = (frameidx + 1) % total_frames;
 
 	memset(frame, 0, 512 * 512 * sizeof(int));
 	for (int i = 0; i < 512; i++)
@@ -53,15 +53,15 @@ void nextframe(int ofs)
 			unsigned int r = 0;
 			unsigned int g = 0;
 			unsigned int b = 0;
-			for (int k = 0; k < frames; k++)
+			for (int k = 0; k < total_frames; k++)
 			{
 				r += (framedata[512 * 512 * k + i * 512 + j] >> 0) & 0xff;
 				g += (framedata[512 * 512 * k + i * 512 + j] >> 8) & 0xff;
 				b += (framedata[512 * 512 * k + i * 512 + j] >> 16) & 0xff;
 			}
-			r /= frames;
-			g /= frames;
-			b /= frames;
+			r /= total_frames;
+			g /= total_frames;
+			b /= total_frames;
 			frame[i * 512 + j] = 0xff000000 | (b << 16) | (g << 8) | r;
 		}
 	}

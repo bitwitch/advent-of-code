@@ -7,6 +7,13 @@
 #include "../base/base_inc.h"
 #include "../base/base_inc.c"
 
+#define GIF_SIZE     1024
+#define SHIP_WIDTH   600
+#define SHIP_HEIGHT  150
+#define SHIP_START_Y (SHIP_HEIGHT + 150)
+#define WAVE_SPEED   0.012
+#define WAVE_AMP     10
+
 typedef struct Node Node;
 
 struct Node {
@@ -17,6 +24,13 @@ struct Node {
 typedef struct {
     U32 count, src, dest;
 } Instruction;
+
+global U32 frames = 0;
+
+
+void render_frame(void) {
+    nextframe(0);
+}
 
 void print_stacks(Node **stacks, size_t stack_count) {
     Node *node;
@@ -33,14 +47,27 @@ void print_stacks(Node **stacks, size_t stack_count) {
     printf("\n");
 }
 
+
+
+
+
+
 U32 palette[26] = {
-    0xcd4a4a, 0xcc6666, 0xbc5d58, 0xff5349, 
-    0xfd5e53, 0xfd7c6e, 0xfdbcb4, 0xff6e4a,
-    0xffa089, 0xea7e5d, 0xb4674d, 0xa5694f,
-    0x9f8170, 0xcd9575, 0xefcdb8, 0xd68a59,
-    0xdeaa88, 0xfaa76c, 0xffcfab, 0xffbd88,
-    0xffcf48, 0xfce883, 0xf0e891, 0xeceabe,
-    0xc5e384, 0xb2ec5d
+    /*0xcd4a4a, 0xcc6666, 0xbc5d58, 0xff5349, */
+    /*0xfd5e53, 0xfd7c6e, 0xfdbcb4, 0xff6e4a,*/
+    /*0xffa089, 0xea7e5d, 0xb4674d, 0xa5694f,*/
+    /*0x9f8170, 0xcd9575, 0xefcdb8, 0xd68a59,*/
+    /*0xdeaa88, 0xfaa76c, 0xffcfab, 0xffbd88,*/
+    /*0xffcf48, 0xfce883, 0xf0e891, 0xeceabe,*/
+    /*0xc5e384, 0xb2ec5d*/
+
+    0xffa134, 0x007a33, 0x1232cd, 0xffa600,
+    0x007a27, 0xf87400, 0x5edb3b, 0xff6f00,
+    0x840000, 0xff9500, 0x000079, 0xff6f00,
+    0xff7b00, 0xff4b33, 0xffffff, 0xff6f00,
+    0x007a27, 0x890000, 0xff6700, 0xd05700,
+    0x840000, 0x007900, 0xdd007d, 0xfc5a00,
+    0xff4ccc, 0x2eebde
 };
 
 U32 rgb_to_bgr(U32 color) {
@@ -55,10 +82,10 @@ void draw_stacks(Node **stacks, size_t stack_count) {
     Node *node;
     size_t i, col;
     int pad = 3;
-    int width = 15;
+    int width = 40;
     int height = 15;
-    int gif_height = 1024;
-    int gif_width = 1024;
+
+    float wave_offset = WAVE_AMP * sin((float)frames * WAVE_SPEED);
 
     // we want to draw the stack in reverse order, but since its a linked list
     // we gotta get the height first so we know where to draw each crate
@@ -80,15 +107,95 @@ void draw_stacks(Node **stacks, size_t stack_count) {
         node = stacks[i];
         col = 0;
         while (node) {
-            drawbox(i*(width+pad) + gif_width/2 - ((width+pad)*stack_count)/2, 
-                    gif_height - ((h - col)*height), 
+            drawbox(i*(width+pad) + GIF_SIZE/4 - ((width+pad)*stack_count)/2, 
+                    GIF_SIZE - SHIP_START_Y - ((h - col)*height) + wave_offset, 
                     width, height, 
-                    /*rgb_to_bgr(palette[node->data - 65]));*/
-                    palette[node->data - 65]);
+                    rgb_to_bgr(palette[node->data - 65]));
+                    /*palette[node->data - 65]);*/
             ++col;
             node = node->next;
         }
     }
+}
+
+void draw_elf(int x, int y, int width, int height) {
+    // green box torso
+    drawbox(x - width/4, 
+            y + height/4, 
+            width/2, height/2, 
+            rgb_to_bgr(0x6caa00));
+ 
+    //circle head
+    drawcircle(x, y, width/2, rgb_to_bgr(0xfdc297));
+    // eyes
+    drawcircle(x-6, y, 3, rgb_to_bgr(0x7d4011));
+    drawcircle(x+6, y, 3, rgb_to_bgr(0x7d4011));
+
+    // cigarette
+    drawbox(x - 20, y+height/8 + 1,
+            20, 4, 
+            0xffffff);
+    drawcircle(x - 20 - 1, y+height/8 + 1, 1, 0x0000ff);
+
+
+    // line, red hat brim
+    drawbox(x - width/2, 
+            y - height/4, 
+            width, height/10, 
+            rgb_to_bgr(0xe6342e));
+     
+    // green triangle hat
+    drawtri(x - width/2, y - height/4, 
+            x, y - height, 
+            x + width/2, y - height/4, 
+            rgb_to_bgr(0x6caa00));
+
+    // brown box shoes
+     drawbox(x - width/4 - 2, 
+            y + height/4 + height/2, 
+            width/2 + 4, height/10 + 1, 
+            rgb_to_bgr(0x7d4011));
+}
+
+
+void draw_bg(void) {
+    U32 sky = rgb_to_bgr(0xd9e3f6);
+    U32 deep = rgb_to_bgr(0x094d4b);
+    U32 crane = rgb_to_bgr(0xb9362d);
+    U32 dock = rgb_to_bgr(0x543b2c);
+
+    // sky
+    drawbox(0, 0, GIF_SIZE, GIF_SIZE, sky);
+
+    // water
+    drawbox(0, GIF_SIZE-200, GIF_SIZE, 200, deep);
+
+    // dock
+    /*drawbox(GIF_SIZE-400, GIF_SIZE-180, 400, 200, dock);*/
+    drawtri(GIF_SIZE-400, GIF_SIZE-180,
+            GIF_SIZE, GIF_SIZE-180,
+            GIF_SIZE, 3*GIF_SIZE, dock);
+
+    // crane
+    drawbox(GIF_SIZE-325, 120, 40, GIF_SIZE-160, crane); // left leg
+    drawbox(GIF_SIZE-70, 120, 40, GIF_SIZE-160, crane); // right leg
+    drawbox(GIF_SIZE/4, 220, 760, 50, crane); // horizontal beam
+    drawline(GIF_SIZE-325, 120, GIF_SIZE-70, 120, 4, crane); // cable
+    drawline( GIF_SIZE/4, 220, GIF_SIZE-325, 120, 4, crane); // cable
+
+    // elf
+    int elf_w = 30, elf_h = 60;
+    draw_elf(GIF_SIZE-150, 170, elf_w, elf_h);
+
+}
+
+void draw_ship(void) {
+    local_persist U32 x = GIF_SIZE/4 - SHIP_WIDTH/2;
+    local_persist U32 y = GIF_SIZE - SHIP_START_Y;
+    float wave_offset = WAVE_AMP * sin((float)frames * WAVE_SPEED);
+    drawbox(x, y+wave_offset, SHIP_WIDTH, SHIP_HEIGHT, 0x231509);
+    drawbox(x, y+SHIP_HEIGHT+wave_offset, SHIP_WIDTH, SHIP_HEIGHT/2, 0x121230);
+    drawstringn("SS AOC", 200, y+SHIP_HEIGHT/2+20+wave_offset, 2, 0x9bbcdc);
 }
 
 void move_crate_from_to(Node **stacks, U32 src, U32 dest) {
@@ -119,25 +226,38 @@ void push_crate(Node **stacks, U32 index, Node *crate) {
 void part_one(Node **stacks, size_t stack_count, Instruction *instructions, size_t instruction_count) {
     size_t i, j, src, dest;
     Node *crate;
+    local_persist int delay = 1;
+
     for (i=0; i<instruction_count; ++i) {
         src = instructions[i].src-1;
         dest = instructions[i].dest-1;
+
+        if (frames >  100) delay = 2;
+        if (frames >  200) delay = 4;
+        if (frames >  600) delay = 8;
+        if (frames >  800) delay = 16;
+        if (frames >  1000) delay = 32;
+
+
         for (j=0; j < instructions[i].count; ++j) {
             crate = pop_crate(stacks, src);
-
-            clear();
-            draw_stacks(stacks, stack_count);
-            nextframe(0);
-
             push_crate(stacks, dest, crate);
 
-            clear();
+            if ((frames % delay) == 0)
+                clear();
+            draw_bg();
             draw_stacks(stacks, stack_count);
-            nextframe(0);
+            draw_ship();
+            if ((frames % delay) == 0) {
+                /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
+                nextframe(0);
+            }
 
-
+            ++frames;
         }
     }
+    /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
+    nextframe(0);
 
     char result[256];
     j = 0;
@@ -154,10 +274,19 @@ void part_one(Node **stacks, size_t stack_count, Instruction *instructions, size
 void part_two(Node **stacks, size_t stack_count, Instruction *instructions, size_t instruction_count) {
     size_t i, j, src, dest;
     Node *node, *head;
+    local_persist int delay = 1;
+
     for (i=0; i<instruction_count; ++i) {
         src = instructions[i].src-1;
         dest = instructions[i].dest-1;
         head = stacks[src];
+
+        if (frames > 100) delay = 2;
+        if (frames > 200) delay = 4;
+        if (frames > 300) delay = 8;
+        if (frames > 400) delay = 16;
+        if (frames > 600) delay = 32;
+
 
         node = stacks[src];
         for (j=1; j < instructions[i].count; ++j) {
@@ -168,7 +297,21 @@ void part_two(Node **stacks, size_t stack_count, Instruction *instructions, size
         stacks[src] = node->next;
         node->next = stacks[dest];
         stacks[dest] = head;
+
+        if ((frames % delay) == 0)
+            clear();
+        draw_bg();
+        draw_stacks(stacks, stack_count);
+        draw_ship();
+        if ((frames % delay) == 0) {
+            /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
+            nextframe(0);
+        }
+
+        ++frames;
     }
+    /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
+    nextframe(0);
 
     char result[256];
     j = 0;
