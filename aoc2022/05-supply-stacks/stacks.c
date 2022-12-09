@@ -11,7 +11,7 @@
 #define SHIP_WIDTH   600
 #define SHIP_HEIGHT  150
 #define SHIP_START_Y (SHIP_HEIGHT + 150)
-#define WAVE_SPEED   0.012
+#define WAVE_SPEED   0.024
 #define WAVE_AMP     10
 
 typedef struct Node Node;
@@ -27,9 +27,9 @@ typedef struct {
 
 global U32 frames = 0;
 
-
 void render_frame(void) {
     nextframe(0);
+    ++frames;
 }
 
 void print_stacks(Node **stacks, size_t stack_count) {
@@ -47,20 +47,7 @@ void print_stacks(Node **stacks, size_t stack_count) {
     printf("\n");
 }
 
-
-
-
-
-
 U32 palette[26] = {
-    /*0xcd4a4a, 0xcc6666, 0xbc5d58, 0xff5349, */
-    /*0xfd5e53, 0xfd7c6e, 0xfdbcb4, 0xff6e4a,*/
-    /*0xffa089, 0xea7e5d, 0xb4674d, 0xa5694f,*/
-    /*0x9f8170, 0xcd9575, 0xefcdb8, 0xd68a59,*/
-    /*0xdeaa88, 0xfaa76c, 0xffcfab, 0xffbd88,*/
-    /*0xffcf48, 0xfce883, 0xf0e891, 0xeceabe,*/
-    /*0xc5e384, 0xb2ec5d*/
-
     0xffa134, 0x007a33, 0x1232cd, 0xffa600,
     0x007a27, 0xf87400, 0x5edb3b, 0xff6f00,
     0x840000, 0xff9500, 0x000079, 0xff6f00,
@@ -137,7 +124,6 @@ void draw_elf(int x, int y, int width, int height) {
             0xffffff);
     drawcircle(x - 20 - 1, y+height/8 + 1, 1, 0x0000ff);
 
-
     // line, red hat brim
     drawbox(x - width/2, 
             y - height/4, 
@@ -186,7 +172,6 @@ void draw_bg(void) {
     // elf
     int elf_w = 30, elf_h = 60;
     draw_elf(GIF_SIZE-150, 170, elf_w, elf_h);
-
 }
 
 void draw_ship(void) {
@@ -226,38 +211,24 @@ void push_crate(Node **stacks, U32 index, Node *crate) {
 void part_one(Node **stacks, size_t stack_count, Instruction *instructions, size_t instruction_count) {
     size_t i, j, src, dest;
     Node *crate;
-    local_persist int delay = 1;
 
     for (i=0; i<instruction_count; ++i) {
         src = instructions[i].src-1;
         dest = instructions[i].dest-1;
 
-        if (frames >  100) delay = 2;
-        if (frames >  200) delay = 4;
-        if (frames >  600) delay = 8;
-        if (frames >  800) delay = 16;
-        if (frames >  1000) delay = 32;
-
-
         for (j=0; j < instructions[i].count; ++j) {
             crate = pop_crate(stacks, src);
             push_crate(stacks, dest, crate);
 
-            if ((frames % delay) == 0)
-                clear();
+            clear();
             draw_bg();
             draw_stacks(stacks, stack_count);
             draw_ship();
-            if ((frames % delay) == 0) {
-                /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
-                nextframe(0);
-            }
-
-            ++frames;
+            render_frame();
         }
     }
     /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
-    nextframe(0);
+    render_frame();
 
     char result[256];
     j = 0;
@@ -305,13 +276,13 @@ void part_two(Node **stacks, size_t stack_count, Instruction *instructions, size
         draw_ship();
         if ((frames % delay) == 0) {
             /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
-            nextframe(0);
+            render_frame();
         }
 
         ++frames;
     }
     /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
-    nextframe(0);
+    render_frame();
 
     char result[256];
     j = 0;
@@ -441,7 +412,7 @@ int main(int argc, char **argv) {
     if (!success) { perror("parse_input"); exit(1); }
 
 
-    setupgif(0, 2, "stacks.gif");
+    setupgif(0, 1, "stacks.gif");
 
     part_one(stacks, stack_count, instructions, instruction_count);
     /*part_two(stacks, stack_count, instructions, instruction_count);*/
