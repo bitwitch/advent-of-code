@@ -5,7 +5,7 @@ generally increase in difficulty each day. It is a lot of fun.
 
 ### Visualizations
 
-#### 2021 [Day 9 - Smoke Basin])aoc2021/09-smoke-basin)
+#### [2021 Day 9 - Smoke Basin](aoc2021/09-smoke-basin)
 ![2021 day 9 visualization](https://i.imgur.com/3Dgc6ZG.gif)  
 
 #### [2021 Day 13 - Transparent Oragami](aoc2021/13-transparent-origami)
