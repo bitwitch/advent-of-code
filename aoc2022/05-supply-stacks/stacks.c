@@ -227,8 +227,6 @@ void part_one(Node **stacks, size_t stack_count, Instruction *instructions, size
             render_frame();
         }
     }
-    /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
-    render_frame();
 
     char result[256];
     j = 0;
@@ -245,19 +243,11 @@ void part_one(Node **stacks, size_t stack_count, Instruction *instructions, size
 void part_two(Node **stacks, size_t stack_count, Instruction *instructions, size_t instruction_count) {
     size_t i, j, src, dest;
     Node *node, *head;
-    local_persist int delay = 1;
 
     for (i=0; i<instruction_count; ++i) {
         src = instructions[i].src-1;
         dest = instructions[i].dest-1;
         head = stacks[src];
-
-        if (frames > 100) delay = 2;
-        if (frames > 200) delay = 4;
-        if (frames > 300) delay = 8;
-        if (frames > 400) delay = 16;
-        if (frames > 600) delay = 32;
-
 
         node = stacks[src];
         for (j=1; j < instructions[i].count; ++j) {
@@ -269,20 +259,12 @@ void part_two(Node **stacks, size_t stack_count, Instruction *instructions, size
         node->next = stacks[dest];
         stacks[dest] = head;
 
-        if ((frames % delay) == 0)
-            clear();
+        clear();
         draw_bg();
         draw_stacks(stacks, stack_count);
         draw_ship();
-        if ((frames % delay) == 0) {
-            /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
-            render_frame();
-        }
-
-        ++frames;
+        render_frame();
     }
-    /*drawstringf(25, 25, 5, 0x000000, "%u", frames);*/
-    render_frame();
 
     char result[256];
     j = 0;
