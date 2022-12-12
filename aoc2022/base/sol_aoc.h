@@ -33,5 +33,5 @@ void drawstringf( int aX, int aY, int n, int aColor, const char* fmt, ...);
 long long getticks();
 
 int isprime(long long val);
-char* load(const char* fname, int* len);
+//char* load(const char* fname, int* len);
 

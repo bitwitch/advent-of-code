@@ -495,27 +495,27 @@ int isprime(long long val)
 	/*return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();*/
 /*}*/
 
-char* load(const char* fname, int* len)
-{
-	int l;
-	FILE* f = NULL;
-	fopen(fname, "rb");
+/*char* load(const char* fname, int* len)*/
+/*{*/
+	/*int l;*/
+	/*FILE* f = NULL;*/
+	/*fopen(fname, "rb");*/
 
-	if (f == NULL)
-	{
-		printf("File %s not found\n", fname);
-		exit(-1);
-	}
-	fseek(f, 0, SEEK_END);
-	l = ftell(f);
-    char* d = malloc(l + 1);
-	d[l] = 0;
-	fseek(f, 0, SEEK_SET);
-	fread(d, 1, l, f);
-	if (len)
-	{
-		*len = l;
-	}
-	fclose(f);
-	return d;
-}
+	/*if (f == NULL)*/
+	/*{*/
+		/*printf("File %s not found\n", fname);*/
+		/*exit(-1);*/
+	/*}*/
+	/*fseek(f, 0, SEEK_END);*/
+	/*l = ftell(f);*/
+    /*char* d = malloc(l + 1);*/
+	/*d[l] = 0;*/
+	/*fseek(f, 0, SEEK_SET);*/
+	/*fread(d, 1, l, f);*/
+	/*if (len)*/
+	/*{*/
+		/**len = l;*/
+	/*}*/
+	/*fclose(f);*/
+	/*return d;*/
+/*}*/

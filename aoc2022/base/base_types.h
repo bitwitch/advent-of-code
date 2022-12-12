@@ -1,5 +1,7 @@
 #pragma once
 
+#include "stb_ds.h"
+
 /*******************************
  * Primative Types
  *******************************/
