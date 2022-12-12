@@ -19,3 +19,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2022 Day 5: Supply Stacks](aoc2022/05-supply-stacks)
 ![2022 day 5 visualization](aoc2022/05-supply-stacks/out.gif)
+
+#### [2022 Day 6: Tuning Trouble](aoc2022/06-tuning-trouble)
+![2022 day 6 visualization](aoc2022/06-tuning-trouble/out.gif)

@@ -10,3 +10,6 @@
 
 #### [Day 5: Supply Stacks](05-supply-stacks)
 ![day 5 visualization](05-supply-stacks/out.gif)
+
+#### [Day 6: Tuning Trouble](06-tuning-trouble)
+![day 6 visualization](06-tuning-trouble/out.gif)
