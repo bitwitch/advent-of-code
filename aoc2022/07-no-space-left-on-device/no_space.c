@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../base/base_inc.h"
-#include "../base/base_inc.c"
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
 
 #define GIF_WIDTH  1024
 #define GIF_HEIGHT 1024
@@ -470,6 +470,7 @@ void visualization(Node *root) {
     drawbox(0, 0, GIF_WIDTH, GIF_HEIGHT, COLOR_GREY);
     drawbox(25, file_block_y, GIF_WIDTH-50, file_block_height, 0x000000);
     dfs(root, 0, 0);
+    nextframe();
 }
 
 #define MAX_QUEUE_SIZE 65536
