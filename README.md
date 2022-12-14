@@ -22,3 +22,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2022 Day 6: Tuning Trouble](aoc2022/06-tuning-trouble)
 ![2022 day 6 visualization](aoc2022/06-tuning-trouble/out.gif)
+
+#### [2022 Day 7: No Space Left On Device](aoc2022/07-no-space-left-on-device)
+![2022 day 7 visualization](aoc2022/07-no-space-left-on-device/out.gif)

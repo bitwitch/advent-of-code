@@ -13,3 +13,6 @@
 
 #### [Day 6: Tuning Trouble](06-tuning-trouble)
 ![day 6 visualization](06-tuning-trouble/out.gif)
+
+#### [Day 7: No Space Left On Device](07-no-space-left-on-device)
+![day 7 visualization](07-no-space-left-on-device/out.gif)
