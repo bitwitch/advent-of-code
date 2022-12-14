@@ -14,12 +14,13 @@
 extern unsigned int framebuffer[];
 
 void setupgif(uint32_t delay, int motionblurframes, const char* fn);
-void nextframe(int ofs);
+void nextframe();
 void endgif();
 void clear();
 void strokerect(int x0, int y0, int x1, int y1, int stroke_width, unsigned int color);
 void drawrect(int x0, int y0, int x1, int y1, unsigned int color);
 void drawbox(int x0, int y0, int w, int h, unsigned int color);
+void strokebox(int x0, int y0, int w, int h, int stroke_width, unsigned int color);
 void drawtri(double x0, double y0, double x1, double y1, double x2, double y2, unsigned int color);
 void drawline(double x0, double y0, double x1, double y1, double w, unsigned int color);
 void drawarrow(double x0, double y0, double x1, double y1, double w, unsigned int color);
