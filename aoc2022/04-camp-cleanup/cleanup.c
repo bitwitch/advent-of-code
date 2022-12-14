@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../base/base_inc.h"
-#include "../base/base_inc.c"
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
 
 typedef struct {
     uint32_t lo, hi;
@@ -76,7 +76,7 @@ void visualize_intervals_isolated(Interval a, Interval b) {
         /*drawline(bx, by, vb.x, vb.y, 2, 0x000000);*/
         strokerect(vb.x, vb.y, vb.x+vb.width, vb.y+unit, 2, vb.color);
 
-        nextframe(0);
+        nextframe();
         clear();
 
         unit += grow_rate;
@@ -106,7 +106,7 @@ void visualize_intervals_isolated(Interval a, Interval b) {
             drawstringf(512-30, 200, 4, 0xFFFFFF, "%d", count);
         }
 
-        nextframe(0);
+        nextframe();
     }
 }
 
@@ -215,7 +215,7 @@ void part_two(Interval *intervals, int intervals_count) {
         if (frames > 800) speed = 41;
 
         if ((frames++ % speed) == 0)
-            nextframe(0);
+            nextframe();
     }
 
     /*clear();*/
@@ -223,10 +223,10 @@ void part_two(Interval *intervals, int intervals_count) {
     // display final overlap count
     for (i=0; i<final_count_iterations; ++i) {
         drawstringf(512-30, 200, 4, 0xFFFFFF, "%d", count);
-        nextframe(0);
-        nextframe(0);
-        nextframe(0);
-        nextframe(0);
+        nextframe();
+        nextframe();
+        nextframe();
+        nextframe();
     }
 
     printf("part_two: %d\n", count);

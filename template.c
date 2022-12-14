@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../base/base_inc.h"
-#include "../base/base_inc.c"
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
 
 void part_one(uint8_t *input) {
     printf("part_one: %d\n", 696969);

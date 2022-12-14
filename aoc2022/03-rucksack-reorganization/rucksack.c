@@ -9,8 +9,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../base/base_inc.h"
-#include "../base/base_inc.c"
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
 
 typedef struct {
     int indices[32];
@@ -70,23 +70,23 @@ void visualize_part_one(char *rucksack, char item) {
         if (found_one && found_two) {
             emphasize_matches(matches_one, 10, y, scale, item, 0x00ff00);
             emphasize_matches(matches_two, comp_offset+10, y, scale, item, 0x00ff00);
-            nextframe(0);
+            nextframe();
 
             emphasize_matches(matches_one, 10, y, scale, item, 0x00ffff);
             emphasize_matches(matches_two, comp_offset+10, y, scale, item, 0x00ffff);
-            nextframe(0);
+            nextframe();
 
             emphasize_matches(matches_one, 10, y, scale, item, 0xffffff);
             emphasize_matches(matches_two, comp_offset+10, y, scale, item, 0xffffff);
-            nextframe(0);
+            nextframe();
 
             emphasize_matches(matches_one, 10, y, scale, item, 0x00ffff);
             emphasize_matches(matches_two, comp_offset+10, y, scale, item, 0x00ffff);
-            nextframe(0);
+            nextframe();
 
             emphasize_matches(matches_one, 10, y, scale, item, 0x00ff00);
             emphasize_matches(matches_two, comp_offset+10, y, scale, item, 0x00ff00);
-            nextframe(0);
+            nextframe();
 
 
             break;
@@ -94,7 +94,7 @@ void visualize_part_one(char *rucksack, char item) {
 
         ++c;
         if (c % chars_per_frame == 0)
-            nextframe(0);
+            nextframe();
     }
     y += 25;
 }
@@ -188,31 +188,31 @@ int group_badge_priority(char *line0, char *line1, char *line2) {
     bit_mask_row(seen0, margin_left, y, side, 0x000000, 0xFFFFFF);
     y0 = y;
     y += side;
-    nextframe(0);
+    nextframe();
 
     bit_mask_row(seen1, margin_left, y, side, 0x000000, 0xFFFFFF);
     y1 = y;
     y += side;
-    nextframe(0);
+    nextframe();
 
     bit_mask_row(seen2, margin_left, y, side, 0x000000, 0xFFFFFF);
     y2 = y;
     y += side;
-    nextframe(0);
+    nextframe();
 
     // emphasize common bit in each row
     drawrect(x_emphasize, y0, x_emphasize+side, y0+side, 0x00FF00);
     drawrect(x_emphasize, y1, x_emphasize+side, y1+side, 0x00FF00);
     drawrect(x_emphasize, y2, x_emphasize+side, y2+side, 0x00FF00);
-    nextframe(0);
+    nextframe();
     drawrect(x_emphasize, y0, x_emphasize+side, y0+side, 0x00FFFF);
     drawrect(x_emphasize, y1, x_emphasize+side, y1+side, 0x00FFFF);
     drawrect(x_emphasize, y2, x_emphasize+side, y2+side, 0x00FFFF);
-    nextframe(0);
+    nextframe();
     drawrect(x_emphasize, y0, x_emphasize+side, y0+side, 0x00FF00);
     drawrect(x_emphasize, y1, x_emphasize+side, y1+side, 0x00FF00);
     drawrect(x_emphasize, y2, x_emphasize+side, y2+side, 0x00FF00);
-    nextframe(0);
+    nextframe();
 
     return common_bit + 1;
 }

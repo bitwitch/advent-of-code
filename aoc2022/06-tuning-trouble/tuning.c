@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../base/base_inc.h"
-#include "../base/base_inc.c"
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
 
 #define GIF_WIDTH  1024
 #define GIF_HEIGHT 1024
@@ -151,7 +151,7 @@ U32 characters_processed_before_marker_detected(uint8_t *input, size_t input_siz
             clear();
             // draw window we are currently checking
             draw_stream_with_window(input, input_size, i, marker_length, count, detected);
-            nextframe(0);
+            nextframe();
         }
 
         if (all_characters_unique(input+i, marker_length)) {
@@ -160,7 +160,7 @@ U32 characters_processed_before_marker_detected(uint8_t *input, size_t input_siz
             for (int j=0; j<20; ++j) {
                 clear();
                 draw_stream_with_window(input, input_size, i, marker_length, count, detected);
-                nextframe(0);
+                nextframe();
             }
             break;
         }
@@ -170,7 +170,7 @@ U32 characters_processed_before_marker_detected(uint8_t *input, size_t input_siz
     clear();
     // draw window we are currently checking
     draw_stream_with_window(input, input_size, i, marker_length, count, detected);
-    nextframe(0);
+    nextframe();
 
     return count;
 }

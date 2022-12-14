@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../base/base_inc.h"
-#include "../base/base_inc.c"
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
 
 #define GIF_SIZE     1024
 #define SHIP_WIDTH   600
@@ -28,7 +28,7 @@ typedef struct {
 global U32 frames = 0;
 
 void render_frame(void) {
-    nextframe(0);
+    nextframe();
     ++frames;
 }
 
