@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
         uint64_t n_count = hmget(step_counts, 'N');
         double n_growth_rate = (n_count - hmget(counts[i-1], 'N')) / (double)hmget(counts[i-1], 'N');
         printf("%f\n", n_growth_rate);
-        printf("step %d: N count=%u growth_rate=%f\n", i, hmget(step_counts, 'N'), n_growth_rate);
+        printf("step %d: N count=%lu growth_rate=%f\n", i, hmget(step_counts, 'N'), n_growth_rate);
     }
 
     return 0;
