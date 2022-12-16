@@ -7,7 +7,15 @@
 #include "../../base/base_inc.h"
 #include "../../base/base_inc.c"
 
-#define KNOT_COUNT 10
+#define GIF_WIDTH   1024
+#define GIF_HEIGHT  1024
+#define OFFSET_X (GIF_WIDTH/4)
+#define OFFSET_Y (GIF_HEIGHT/5)
+#define SCALE 12
+#define KNOT_COUNT  10
+#define SKIP_FRAMES 1
+#define BLUE  0xF3D803
+#define PINK  0xB545F5
 
 typedef enum {
     DIRECTION_UP,
@@ -25,6 +33,11 @@ typedef struct {
 typedef struct {
     int x, y;
 } Vec2i;
+
+typedef struct { 
+    Vec2i key; 
+    bool value; 
+} Hashmap;
 
 void tail_follow(Vec2i *tail, Vec2i head) {
     // if two away directly up, down, left, or right step one in that direction
@@ -60,7 +73,7 @@ void part_one(Movement *movements) {
     Movement m;
     Vec2i head = {0, 0};
     Vec2i tail = {0, 0};
-    struct { Vec2i key; bool value; } *visited = NULL;
+    Hashmap *visited = NULL;
 
     for (i=0; i<arrlen(movements); ++i) {
         m = movements[i];
@@ -73,12 +86,42 @@ void part_one(Movement *movements) {
     printf("part_one: %ld\n", hmlen(visited));
 }
 
+void draw_rope(Vec2i *knots, Hashmap *visited) {
+    local_persist U64 frame_count = 0;
+    clear();
+
+    int i, x, y;
+    int last = KNOT_COUNT - 1;
+    U32 color;
+    Vec2i pos;
+
+    for (i=last; i>=0; --i) {
+        if (i == 0) color = BLUE;
+        else if (i == last) color = PINK;
+        else color = 0xFFFFFF;
+        x = knots[i].x * SCALE + OFFSET_X;
+        y = OFFSET_Y - knots[i].y * SCALE;
+        drawcircle(x, y, 5, color);
+    }
+
+    for (i=0; i<hmlen(visited); ++i) {
+        pos = visited[i].key;
+        x = pos.x * SCALE + OFFSET_X;
+        y = OFFSET_Y - pos.y * SCALE;
+        drawcircle(x, y, 5, PINK);
+    }
+
+    if (frame_count % SKIP_FRAMES == 0)
+        nextframe();
+    ++frame_count;
+}
+
 void part_two(Movement *movements) {
     int i, j, k;
     Movement m;
     Vec2i knots[KNOT_COUNT] = {0};
     Vec2i *head = &knots[0];
-    struct { Vec2i key; bool value; } *visited = NULL;
+    Hashmap *visited = NULL;
 
     for (i=0; i<arrlen(movements); ++i) {
         m = movements[i];
@@ -88,8 +131,10 @@ void part_two(Movement *movements) {
                 tail_follow(&knots[k], knots[k-1]);
             }
             hmput(visited, knots[KNOT_COUNT-1], true);
+            draw_rope(knots, visited);
         }
     }
+    nextframe();
     printf("part_two: %ld\n", hmlen(visited));
 }
 
@@ -130,8 +175,10 @@ int main(int argc, char **argv) {
         arrput(movements, m);
     } while (*file_data != '\0');
 
+    setupgif(0, 1, "rope.gif");
     part_one(movements);
     part_two(movements);
+    endgif();
 
     return 0;
 }
