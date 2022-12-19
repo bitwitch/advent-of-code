@@ -9,4 +9,4 @@ gif: $(EXE)
 
 .PHONY: optimize
 optimize: $(EXE).gif 
-	gifsicle -d2 $(EXE).gif -o out.gif --colors 8 --loopcount=forever
+	gifsicle -d6 $(EXE).gif -o out.gif --colors 8 --loopcount=forever

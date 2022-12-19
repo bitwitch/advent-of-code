@@ -448,9 +448,8 @@ int *build_grid(U8 *input, int *out_rows, int *out_cols) {
 		++rows;
 	} while (*input != '\0');
 
-	nextframe();
-
 	*out_rows = rows;
+
 	return grid;
 }
 
