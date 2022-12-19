@@ -22,3 +22,6 @@
 
 #### [Day 9: Rope Bridge](09-rope-bridge)
 ![day 9 visualization](09-rope-bridge/out.gif)
+
+#### [Day 10: Cathode-Ray Tube](10-cathode-ray-tube)
+![day 10 visualization](10-cathode-ray-tube/out.gif)

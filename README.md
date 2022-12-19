@@ -31,3 +31,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2022 Day 9: Rope Bridge](aoc2022/09-rope-bridge)
 ![2022 day 9 visualization](aoc2022/09-rope-bridge/out.gif)
+
+#### [2022 Day 10: Cathode-Ray Tube](aoc2022/10-cathode-ray-tube)
+![2022 day 10 visualization](aoc2022/10-cathode-ray-tube/out.gif)

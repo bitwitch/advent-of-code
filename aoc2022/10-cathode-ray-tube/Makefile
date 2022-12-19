@@ -1,6 +1,6 @@
 EXE        := crt
-INPUT_FILE := input_small.txt
-GIF_DELAY  := 6
+INPUT_FILE := input.txt
+GIF_DELAY  := 2
 
 .PHONY: $(EXE)
 
