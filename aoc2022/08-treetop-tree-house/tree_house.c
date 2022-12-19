@@ -12,6 +12,8 @@
 #define SKIP_FRAMES 16
 #define SPEED 0.1
 #define AMPLITUDE 25
+#define FRAME_START_GROW   50
+#define FRAME_START_SHRINK 100
 
 typedef enum {
 	DIRECTION_NORTH,
@@ -31,6 +33,10 @@ typedef struct {
 	Vec3f target;
 } Camera;
 
+typedef struct {
+	int row, col;
+} Coord;
+
 typedef float Mat4f[4][4];
 
 global U64 frame_count = 0;
@@ -39,6 +45,8 @@ global Camera camera = {0};
 global Mat4f ortho_projection = {0};
 global Mat4f perspective_projection = {0};
 global Mat4f view_matrix = {0};
+
+global Coord *part_one_visible = NULL;
 
 Vec3f normalized(Vec3f a) {
 	float magnitude = sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);
@@ -64,6 +72,10 @@ Vec3f vec3f_sub(Vec3f a, Vec3f b) {
 		.y = a.y - b.y,
 		.z = a.z - b.z
 	};
+}
+
+float lerpf(float a, float b, float t) {
+	return a + (b-a)*t;
 }
 
 float dot(Vec3f a, Vec3f b) {
@@ -122,7 +134,6 @@ void create_perspective_matrix(float fovy_degrees, float aspect, float near, flo
 }
 
 void calc_view_matrix(Camera *cam, Mat4f view_matrix) {
-
 	Vec3f z_axis = cam->forward;
 	Vec3f y_axis = cam->up;
 	Vec3f x_axis = normalized(cross(y_axis, z_axis)); 
@@ -171,11 +182,11 @@ Vec3f mul_point_matrix(Vec3f p, Mat4f M) {
 void camera_init(void) {
 	float b, t, l, r, n, f, max;
 
-	camera.pos = (Vec3f){1500, 600, 1500};
+	camera.pos = (Vec3f){600, 600, 600};
 	camera.up = (Vec3f){0, 1, 0};
 	camera.forward = (Vec3f){0, 0, 1};
 
-	camera.target = (Vec3f){490, 0, 490};
+	camera.target = (Vec3f){490, 100, 490};
 
 	max = 1024;
 	r = max * (GIF_WIDTH / (float)GIF_HEIGHT);
@@ -187,23 +198,14 @@ void camera_init(void) {
 }
 
 void camera_update(Camera *cam, int frame_count) {
-	(void)frame_count;
-
-	cam->pos.x = 600 * sin(frame_count*0.05);
-	cam->pos.z = 600 * cos(frame_count*0.05);
+	cam->pos.x = 980 * sin(frame_count*0.05);
+	cam->pos.z = 980 * cos(frame_count*0.05);
 
 	// set the forward and up vectors based on target
 	Vec3f up = {0, 1, 0};
 	cam->forward = normalized(vec3f_sub(cam->pos, cam->target));
     Vec3f right = normalized(cross(up, cam->forward));
     cam->up = cross(cam->forward, right);
-
-	/*cam->pos.y += 10;*/
-
-	/*cam->pos.z += 20;*/
-	/*printf("cam pos: %f %f %f\n", cam->pos.x, cam->pos.y, cam->pos.z);*/
-	/*printf("cam up: %f %f %f\n", cam->up.x, cam->up.y, cam->up.z);*/
-	/*printf("cam forward: %f %f %f\n", cam->forward.x, cam->forward.y, cam->forward.z);*/
 
 	calc_view_matrix(cam, view_matrix);
 }
@@ -331,8 +333,7 @@ void draw_test(void) {
 	}
 }
 
-void draw_tree(int col, int row, int height) {
-	int scale_y = 50;
+void draw_tree(int row, int col, int treetop_x, int treetop_y) {
 	int margin = 10;
 
 	Vec3f p0 = {
@@ -341,42 +342,58 @@ void draw_tree(int col, int row, int height) {
 		.z = row*margin,
 	};
 
-	/*printf("point at (%f,%f)\n", p0.x, p0.y);*/
-
-	Vec3f p1 = {
-		.x = col*margin,
-		.y = height * scale_y,
-		.z = row*margin,
-	};
-
 	p0 = mul_point_matrix(p0, view_matrix);
-	p1 = mul_point_matrix(p1, view_matrix);
-
 	p0 = mul_point_matrix(p0, perspective_projection);
-	p1 = mul_point_matrix(p1, perspective_projection);
-
-	/*printf("point at (%f,%f)\n", p1.x, p1.y);*/
 
 	int x0 = (p0.x  + 1) * 0.5 * GIF_WIDTH + 400;
-	int x1 = (p1.x  + 1) * 0.5 * GIF_WIDTH + 400;
 	int y0 = GIF_HEIGHT - (p0.y  + 1) * 0.5 * GIF_HEIGHT;
-	int y1 = GIF_HEIGHT - (p1.y  + 1) * 0.5 * GIF_HEIGHT;
 
-	/*drawcircle(x0, y0, 2, 0x00BB00);*/
-	drawline(x0, y0, x1, y1, 2, 0x00BB00);
+	if (frame_count < FRAME_START_GROW)
+		drawcircle(x0, y0, 2, 0x00BB00);
+	else if (treetop_y != y0)
+		drawline(x0, y0, treetop_x, treetop_y, 2, 0x00BB00);
+	else
+		drawcircle(x0, y0, 2, 0x00BB00);
 }
 
-void draw_forest(int *grid, int cols, int rows) {
-	int i, j;
-	for (j=0; j<rows; ++j) {
-		for (i=0; i<cols; ++i) {
-			draw_tree(i, j, grid[j*cols+i]);
-		}
+void draw_forest(int *grid, int rows, int cols) {
+	(void)rows;
+
+	int i, count = arrlen(part_one_visible);
+
+	assert(count < 2048);
+	local_persist float t[2048] = {0}; // t values for lerping height in draw_tree
+
+	for (i=0; i<count; ++i) {
+		int margin = 10;
+		Coord coord = part_one_visible[i];
+		float height = grid[coord.row * cols + coord.col];
+		int scale_y = 50;
+		float render_height = lerpf(0, height*scale_y, t[i]);
+		Vec3f p1 = {
+			.x = coord.col*margin,
+			.y = render_height,
+			.z = coord.row*margin,
+		};
+		p1 = mul_point_matrix(p1, view_matrix);
+		p1 = mul_point_matrix(p1, perspective_projection);
+		int x1 = (p1.x  + 1) * 0.5 * GIF_WIDTH + 400;
+		int y1 = GIF_HEIGHT - (p1.y  + 1) * 0.5 * GIF_HEIGHT;
+
+		if (frame_count >= FRAME_START_SHRINK) {
+			t[i] -= 0.05;
+			if (t[i] < 0) t[i] = 0;
+		} else if (frame_count >= FRAME_START_GROW) {
+			t[i] += 0.05;
+			if (t[i] > 1) t[i] = 1;
+		} 
+		draw_tree(coord.row, coord.col, x1, y1);
 	}
 }
 
 void part_one(int *grid, int rows, int cols) {
 	int i, j, visible = 0;
+	Coord coord = {0};
 	for (j=1; j<rows-1; ++j) {
 		for (i=1; i<cols-1; ++i) {
 			if (
@@ -386,6 +403,10 @@ void part_one(int *grid, int rows, int cols) {
 				visible_from_direction(grid, rows, cols, j, i, DIRECTION_WEST)
 			){
 				++visible;
+
+				coord.row = j;
+				coord.col = i;
+				arrput(part_one_visible, coord);
 			}
 		}
 	}
@@ -420,13 +441,6 @@ int *build_grid(U8 *input, int *out_rows, int *out_cols) {
 		// parse each character in line as int and put in grid
 		for (line = arb_chop_by_delimiter((char **)&input, "\n"); *line != '\0'; ++line) {
 			height = *line - 48;
-
-			/*draw_tree(cols, rows, height);*/
-
-			/*if (frame_count % SKIP_FRAMES == 0)*/
-				/*nextframe();*/
-			/*++frame_count;*/
-
 			arrput(grid, height);
 			++cols;
 		}
@@ -469,18 +483,17 @@ int main(int argc, char **argv) {
 
 	grid = build_grid(file_data, &rows, &cols);
 
+	part_one(grid, rows, cols);
+	part_two(grid, rows, cols);
 
 	camera_init();
-	for (frame_count = 0; frame_count < 100; ++frame_count) {
+	for (frame_count = 0; frame_count < 250; ++frame_count) {
 		camera_update(&camera, frame_count);
 		clear();
 		draw_forest(grid, rows, cols);
 		/*draw_test();*/
 		nextframe();
 	}
-
-	part_one(grid, rows, cols);
-	part_two(grid, rows, cols);
 
 	endgif();
 

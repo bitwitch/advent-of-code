@@ -16,3 +16,6 @@
 
 #### [Day 7: No Space Left On Device](07-no-space-left-on-device)
 ![day 7 visualization](07-no-space-left-on-device/out.gif)
+
+#### [Day 8: Treetop Tree House](08-treetop-tree-house)
+![day 8 visualization](08-treetop-tree-house/out.gif)
