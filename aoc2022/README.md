@@ -19,3 +19,6 @@
 
 #### [Day 8: Treetop Tree House](08-treetop-tree-house)
 ![day 8 visualization](08-treetop-tree-house/out.gif)
+
+#### [Day 9: Rope Bridge](09-rope-bridge)
+![day 9 visualization](09-rope-bridge/out.gif)

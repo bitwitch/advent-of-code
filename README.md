@@ -27,4 +27,7 @@ generally increase in difficulty each day. It is a lot of fun.
 ![2022 day 7 visualization](aoc2022/07-no-space-left-on-device/out.gif)
 
 #### [2022 Day 8: Treetop Tree House](aoc2022/08-treetop-tree-house)
-![day 8 visualization](aoc2022/08-treetop-tree-house/out.gif)
+![2022 day 8 visualization](aoc2022/08-treetop-tree-house/out.gif)
+
+#### [2022 Day 9: Rope Bridge](aoc2022/09-rope-bridge)
+![2022 day 9 visualization](aoc2022/09-rope-bridge/out.gif)
