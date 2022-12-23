@@ -73,13 +73,12 @@ int arb_read_entire_file(FILE *fp, uint8_t **dataptr, size_t *sizeptr) {
     return ARB_READ_ENTIRE_FILE_OK;
 }
 
-
 char *arb_chop_by_delimiter(char **str, char *delimiter) {
     char *chopped = *str;
 
     char *found = strstr(*str, delimiter);
     if (found == NULL) {
-        str += strlen(*str);
+        *str += strlen(*str);
         return chopped;
     }
 
