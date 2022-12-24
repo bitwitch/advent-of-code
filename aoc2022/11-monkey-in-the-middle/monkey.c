@@ -7,6 +7,9 @@
 #include "../../base/base_inc.h"
 #include "../../base/base_inc.c"
 
+#define SKIP_FRAMES 2
+#define THROW_DELAY 10
+
 typedef enum {
     OP_ADD,
     OP_MUL,
@@ -24,7 +27,6 @@ typedef struct {
     float t; // lerp value
 } Item;
 
-
 typedef struct {
     U64 *items; // dynamic array of item handles
     Operation op;
@@ -33,15 +35,29 @@ typedef struct {
     U64 true_target, false_target;
     U64 items_inspected;
     Vec2f pos;
+    int throw_timer;
 } Monkey;
 
-/*while () {*/
-    /*tick_sim(); */
-    /*tick_visual();*/
-    /*render();*/
-/*}*/
-
 global Item *items = NULL;
+global Item* wait_item = NULL;
+global U64 frames = 0;
+
+float lerpf(float a, float b, float t) {
+	return a + (b-a)*t;
+}
+
+float vec2f_dist(Vec2f a, Vec2f b) {
+    float x = fabs(a.x - b.x);
+    float y = fabs(a.y - b.y);
+    return sqrtf(x*x + y*y);
+}
+
+Vec2f vec2f_lerp(Vec2f a, Vec2f b, float t) {
+    return (Vec2f){
+        .x = lerpf(a.x, b.x, t),
+        .y = lerpf(a.y, b.y, t)
+    };
+}
 
 void tick_sim(Monkey *monkeys, U64 worry_divisor, U64 common_divisor, U64 *turn) {
     U64 i, j, new, target, item_handle;
@@ -50,24 +66,36 @@ void tick_sim(Monkey *monkeys, U64 worry_divisor, U64 common_divisor, U64 *turn)
 
     for (i=0; i<arrlenu(monkeys); ++i) {
         m = &monkeys[i];
-        for (j=0; j<arrlenu(m->items); ++j) {
-            m->items_inspected += 1;
 
+        // delay between throws
+        /*if (m->throw_timer <= 0) {*/
+            /*m->throw_timer = THROW_DELAY;*/
+        /*} else {*/
+            /*m->throw_timer -= 1;*/
+            /*continue;*/
+        /*}*/
+
+        for (j=0; j<arrlenu(m->items); ++j) {
             item_handle = m->items[j];
             item = &items[item_handle];
 
             // cant commit throw until monkey actually has item in hand
-            /*if (item->t > 0 && item->t < 1) {*/
-            /*return;*/
-            /*}*/
+            if (item->t > 0 && item->t < 1) {
+                /*continue;*/
+                /*wait_item = item;*/
+                /*return;*/
+            }
+
+
+            /*if (wait_item) return;*/
 
             switch (m->op) {
                 case OP_ADD: new = item->worry + m->operand; break;
                 case OP_MUL: new = item->worry * m->operand; break;
                 case OP_SQR: new = item->worry * item->worry; break;
                 default: 
-                             fprintf(stderr, "Unrecognized op %d", m->op);
-                             break;
+                    fprintf(stderr, "Unrecognized op %d", m->op);
+                    break;
             }
             new %= common_divisor;
             new /= worry_divisor;
@@ -79,6 +107,10 @@ void tick_sim(Monkey *monkeys, U64 worry_divisor, U64 common_divisor, U64 *turn)
             item->t     = 0;
 
             arrput(monkeys[target].items, item_handle);
+
+            /*arrdel(m->items, j);*/
+
+            m->items_inspected += 1;
         }
         // clear the array
         arrsetlen(m->items, 0);
@@ -94,8 +126,32 @@ void draw_monkeys(Monkey *monkeys) {
     }
 }
 
+
 void tick_visual(Monkey *monkeys) {
-    (void)monkeys;
+    int i, half_size=5;
+    U32 color = 0xFFFFFF;
+    int px_per_frame = 10;
+
+    clear();
+    draw_monkeys(monkeys);
+
+    // update and draw items
+    for (i=0; i<arrlen(items); ++i) {
+        Item *item = &items[i];
+        float dist = vec2f_dist(item->start, item->end);
+        float step = dist == 0 ? 0 : px_per_frame / dist;
+        Vec2f pos = vec2f_lerp(item->start, item->end, item->t);
+        printf("pos=(%f,%f)\n", pos.x, pos.y);
+        drawbox(pos.x - half_size, pos.y - half_size, 2*half_size, 2*half_size, color);
+        item->t = Clamp(0, item->t+step, 1);
+        if (item == wait_item && item->t == 1) {
+            wait_item = NULL;
+        }
+    }
+
+    if (frames % SKIP_FRAMES == 0)
+        nextframe();
+    ++frames;
 }
 
 void run(Monkey *monkeys, U64 turn_count, U64 worry_divisor, U64 common_divisor) {
@@ -105,6 +161,9 @@ void run(Monkey *monkeys, U64 turn_count, U64 worry_divisor, U64 common_divisor)
         tick_sim(monkeys, worry_divisor, common_divisor, &turn);
         tick_visual(monkeys);
     }
+
+    // TODO(shaw): finish simulating any items still in flight
+    nextframe();
 
     for (i=0; i<arrlenu(monkeys); ++i) {
         count = monkeys[i].items_inspected;
@@ -178,6 +237,14 @@ Monkey *parse_monkeys(U8 *input, size_t input_size) {
         monkey.pos.x = 90 + 800 * 0.5 * (-cos(i * 0.7853981633974483f) + 1);
         monkey.pos.y = 512 - 50 - (300 * sin(i * 0.7853981633974483f));
 
+
+        // initialize item positions
+        for (int j=0; j<arrlen(monkey.items); ++j) {
+            Item *item = &items[monkey.items[j]];
+            item->start.x = item->end.x = monkey.pos.x;
+            item->start.y = item->end.y = monkey.pos.y;
+        }
+
         arrput(monkeys, monkey);
         ++i;
     } while (*input != '\0');
@@ -192,14 +259,26 @@ U64 get_common_divisor(Monkey *monkeys) {
 	return common;
 }
 
+void print_items(void) {
+    for (int j=0; j<arrlen(items); ++j) {
+        Item i = items[j];
+        printf("worry=%llu start=(%f,%f) end=(%f,%f) t=%f\n", 
+                i.worry, i.start.x, i.start.y, i.end.x, i.end.y, i.t);
+    }
+}
+
+void print_monkey(Monkey m) {
+    printf("operand=%llu divisor=%llu true=%llu false=%llu\n",
+        m.operand, m.divisor, m.true_target, m.false_target);
+    for (int i=0; i<arrlen(m.items); ++i)
+        printf("\t%llu  ", items[m.items[i]].worry);
+    printf("\n");
+}
+
 void print_monkeys(Monkey *monkeys) {
     for (int i=0; i<arrlen(monkeys); ++i) {
-        Monkey m = monkeys[i];
-        printf("\n%d: operand=%llu divisor=%llu true=%llu false=%llu\n",
-                i, m.operand, m.divisor, m.true_target, m.false_target);
-        for (int j=0; j<arrlen(m.items); ++j) {
-            printf("\t%llu  ", items[m.items[j]].worry);
-        }
+        printf("Monkey %d: ", i);
+        print_monkey(monkeys[i]);
     }
 }
 
@@ -228,6 +307,13 @@ int main(int argc, char **argv) {
 
     Monkey *monkeys = parse_monkeys(file_data, file_size);
 
+    /*for (int i=0; i<arrlen(items); ++i) {*/
+        /*items[i].start.x = 512;*/
+        /*items[i].start.y = 512;*/
+        /*items[i].end.x = 512;*/
+        /*items[i].end.y = 512;*/
+    /*}*/
+
 	U64 common_divisor = get_common_divisor(monkeys);
 
     setupgif(0, 1, "monkey.gif");
@@ -235,11 +321,13 @@ int main(int argc, char **argv) {
    	// NOTE(shaw): only one of these can be uncommented at a time since
 	// run modifies the monkeys
 
-    /*run(monkeys, 20, 3, common_divisor);*/
-    run(monkeys, 10000, 1, common_divisor);
+    run(monkeys, 20, 3, common_divisor);
+
+    /*run(monkeys, 10000, 1, common_divisor);*/
 
     endgif();
 
     return 0;
 }
+
 
