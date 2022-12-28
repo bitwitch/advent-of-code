@@ -1,11 +1,11 @@
 EXE        := monkey
 INPUT_FILE := input_small.txt
-GIF_DELAY  := 6
+GIF_DELAY  := 4
 
 .PHONY: $(EXE)
 
 $(EXE): 
-	gcc -g -Og -Wall -Wextra -pedantic -o $(EXE) $(EXE).c -lm
+	gcc -g  -Wall -Wextra -pedantic -o $(EXE) $(EXE).c -lm
 
 .PHONY: $(EXE).gif
 $(EXE).gif: $(EXE)

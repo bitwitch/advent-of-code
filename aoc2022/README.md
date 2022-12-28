@@ -25,3 +25,6 @@
 
 #### [Day 10: Cathode-Ray Tube](10-cathode-ray-tube)
 ![day 10 visualization](10-cathode-ray-tube/out.gif)
+
+#### [Day 11: Monkey In The Middle](11-monkey-in-the-middle)
+![day 11 visualization](11-monkey-in-the-middle/out.gif)

@@ -34,3 +34,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2022 Day 10: Cathode-Ray Tube](aoc2022/10-cathode-ray-tube)
 ![2022 day 10 visualization](aoc2022/10-cathode-ray-tube/out.gif)
+
+#### [2022 Day 11: Monkey In The Middle](aoc2022/11-monkey-in-the-middle)
+![2022 day 11 visualization](aoc2022/11-monkey-in-the-middle/out.gif)
