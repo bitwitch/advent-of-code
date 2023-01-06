@@ -1,6 +1,6 @@
 EXE        := hill
-INPUT_FILE := input_small.txt
-GIF_DELAY  := 4
+INPUT_FILE := input.txt
+GIF_DELAY  := 2
 
 .PHONY: $(EXE)
 
