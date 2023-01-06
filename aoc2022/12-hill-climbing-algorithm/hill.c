@@ -23,18 +23,11 @@ typedef struct {
 } Node;
 
 int part_one(Map map, Vec2i start) {
-    /*
-    for (int j=0; j<map.rows; ++j) {
-        for (int i=0; i<map.cols; ++i) {
-            printf("%c ", map.data[j*map.cols+i] + 'a');
-        }
-        printf("\n");
-    }
-    */
-
     int steps = 0;
+    bool reached_destination = false;
 
     // NOTE(shaw): using stb_ds dynamic array as a queue is dumb and slow
+    // since it will shift the whole array every insert
     Vec2i *frontier = NULL;
     struct { Vec2i key, value; } *came_from = NULL; // hashmap
     Vec2i current, neighbor;
@@ -47,6 +40,7 @@ int part_one(Map map, Vec2i start) {
         current_height = map.data[current.y * map.cols + current.x];
         
         if (current.x == map.end.x && current.y == map.end.y) {
+            reached_destination = true;
             break;
         }
 
@@ -74,10 +68,12 @@ int part_one(Map map, Vec2i start) {
         }
     }
 
-    current = map.end;
-    while (!(current.x == start.x && current.y == start.y)) {
-        current = hmget(came_from, current);
-        ++steps;
+    if (reached_destination) {
+        current = map.end;
+        while (!(current.x == start.x && current.y == start.y)) {
+            current = hmget(came_from, current);
+            ++steps;
+        }
     }
 
     return steps;
@@ -89,7 +85,10 @@ void part_two(Map map) {
     for (int i=0; i<map.cols; ++i) {
         if (map.data[j*map.cols+i] == 0) {
             int steps = part_one(map, (Vec2i){i,j});
-            min_steps = Min(min_steps, steps);
+
+            // zero means destination was not reached
+            if (steps > 0)
+                min_steps = Min(min_steps, steps);
         }
     }
     printf("part_two: %d\n", min_steps);
@@ -141,7 +140,7 @@ int main(int argc, char **argv) {
     }
 
     FILE *fp;
-    uint8_t *file_data, *file_copy;
+    uint8_t *file_data;
     size_t file_size;
 
     fp = fopen(argv[1], "r");
@@ -156,12 +155,6 @@ int main(int argc, char **argv) {
 
     fclose(fp);
 
-    file_copy = malloc(file_size);
-    if (!file_copy) { perror("malloc"); exit(1); }
-    memcpy(file_copy, file_data, file_size);
-
-    // TODO: build a graph representing the height map
-    //
     Map map = build_map(file_data);
 
     int steps = part_one(map, map.start);
