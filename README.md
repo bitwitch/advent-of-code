@@ -37,3 +37,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2022 Day 11: Monkey In The Middle](aoc2022/11-monkey-in-the-middle)
 ![2022 day 11 visualization](aoc2022/11-monkey-in-the-middle/out.gif)
+
+#### [2022 Day 12: Hill Climbing Algorithm](aoc2022/12-hill-climbing-algorithm)
+![2022 day 12 visualization](aoc2022/12-hill-climbing-algorithm/out.gif)

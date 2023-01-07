@@ -38,39 +38,13 @@ typedef struct {
 
 
 global U64 frames = 0;
-
 global U32 colors[26] = {
-    0x4015ae,
-    0x4114ad,
-    0x4213ac,
-    0x4312ab,
-    0x4411aa,
-
-    0x4510a9,
-    0x460fa8,
-    0x470ea7,
-    0x480da6,
-    0x490ca5,
-
-    0x4a0ba4,
-    0x4b0aa3,
-    0x4c09a2,
-    0x4d08a1,
-    0x4e0790,
-
-    0x4f069f,
-    0x50059e,
-    0x51049d,
-    0x52039c,
-    0x53029b,
-
-    0x54019a,
-    0x550099,
-    0x560098,
-    0x570097,
-    0x580096,
-
-    0x590095
+    0x4d1b1b, 0x391b1f, 0x351b23, 0x311b27, 0x2d1b2b, 
+    0x291b2f, 0x251b33, 0x211b37, 0x1d1b3b, 0x191b3f, 
+    0x151b43, 0x111b47, 0x0d1b4b, 0x091b4f, 0x051b53, 
+    0x011b57, 0x001b5b, 0x001b5f, 0x001b63, 0x001b67,
+    0x001b6b, 0x001b6f, 0x001b73, 0x001b77, 0x001b7b, 
+    0x001b7f
 };
 
 int vec2i_manhattan_dist(Vec2i a, Vec2i b) {
@@ -78,7 +52,7 @@ int vec2i_manhattan_dist(Vec2i a, Vec2i b) {
 }
 
 U32 saturate(U32 color) {
-    float factor = 1.1;
+    float factor = 1.3;
     U32 r = factor * ((color >>  0) & 0xFF);
     U32 g = factor * ((color >>  8) & 0xFF);
     U32 b = factor * ((color >> 16) & 0xFF);
@@ -105,12 +79,17 @@ void draw_map(Map map, Hashmap *came_from) {
 }
 
 void draw_path(Vec2i start, Vec2i current, Hashmap *came_from) {
+    int x, y;
     while (!(current.x == start.x && current.y == start.y)) {
-        int y = current.y * CELL_HEIGHT + OFFY;
-        int x = current.x * CELL_WIDTH;
+        y = current.y * CELL_HEIGHT + OFFY;
+        x = current.x * CELL_WIDTH;
         drawbox(x, y, CELL_WIDTH, CELL_HEIGHT, 0xDDBB00);
         current = hmget(came_from, current);
     }
+    // draw start
+    y = start.y * CELL_HEIGHT + OFFY;
+    x = start.x * CELL_WIDTH;
+    drawbox(x, y, CELL_WIDTH, CELL_HEIGHT, 0xDDBB00);
 }
 
 Priority_Position *priority_push(Priority_Position *queue, Vec2i item, int priority) {
@@ -196,22 +175,7 @@ int part_one(Map map, Vec2i start) {
     }
 
     draw_map(map, came_from);
-    draw_path(start, current, came_from);
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
-    nextframe();
+    draw_path(start, map.end, came_from);
     nextframe();
     nextframe();
 
@@ -301,8 +265,6 @@ int main(int argc, char **argv) {
     setupgif(0, 1, "hill.gif");
 
     Map map = build_map(file_data);
-
-    nextframe();
 
     draw_map(map, NULL);
     nextframe();

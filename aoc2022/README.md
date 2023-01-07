@@ -28,3 +28,6 @@
 
 #### [Day 11: Monkey In The Middle](11-monkey-in-the-middle)
 ![day 11 visualization](11-monkey-in-the-middle/out.gif)
+
+#### [Day 12: Hill Climbing Algorithm](12-hill-climbing-algorithm)
+![day 12 visualization](12-hill-climbing-algorithm/out.gif)
