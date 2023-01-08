@@ -64,12 +64,18 @@ int compare_elements(Element left, Element right) {
 	return result;
 }
 
-void part_one(Element pairs) {
+int qsort_compare_elements(const void *a, const void *b) {
+	Element left = *((Element*)a);
+	Element right = *((Element*)b);
+	return compare_elements(left, right);
+}
+
+void part_one(Element packets) {
 	int pair_index = 1;
 	int sum = 0;
-	for (int i=0; i<arrlen(pairs.data.list) - 1; i+=2) {
-		Element left = pairs.data.list[i];		
-		Element right = pairs.data.list[i+1];		
+	for (int i=0; i<arrlen(packets.data.list) - 1; i+=2) {
+		Element left = packets.data.list[i];		
+		Element right = packets.data.list[i+1];		
 		int result = compare_elements(left, right);
 		if (result <= 0) sum += pair_index;
 		++pair_index;
@@ -77,9 +83,41 @@ void part_one(Element pairs) {
 	printf("part_one: %d\n", sum);
 }
 
-void part_two(Element pairs) {
-	(void)pairs;
-    printf("part_two: %d\n", 696969);
+void part_two(Element packets) {
+	// add divider packets
+	Element divider_one = { .type = ETYPE_LIST };
+	Element d1_list = { .type = ETYPE_LIST };
+	Element d1_num = { .type = ETYPE_INT, .data = { 2 }};
+	arrput(d1_list.data.list, d1_num);
+	arrput(divider_one.data.list, d1_list);
+
+	Element divider_two = { .type = ETYPE_LIST };
+	Element d2_list = { .type = ETYPE_LIST };
+	Element d2_num = { .type = ETYPE_INT, .data = { 6 }};
+	arrput(d2_list.data.list, d2_num);
+	arrput(divider_two.data.list, d2_list);
+
+	arrput(packets.data.list, divider_one);
+	arrput(packets.data.list, divider_two);
+
+	// sort packets
+	qsort(packets.data.list, arrlen(packets.data.list), sizeof(Element), qsort_compare_elements);
+
+	// locate divider packets
+	int index_one=0, index_two=0; 
+	for (int i=0; i<arrlen(packets.data.list); ++i) {
+		Element p = packets.data.list[i];
+		if (arrlen(p.data.list) != 1) continue;
+		Element first = p.data.list[0];
+		if (first.type == ETYPE_LIST && arrlen(first.data.list) == 1) {
+			if (first.data.list[0].data.num == 2)
+				index_one = i+1;
+			if (first.data.list[0].data.num == 6)
+				index_two = i+1;
+		}
+	}
+
+	printf("part_two: %d\n", index_one * index_two);
 }
 
 Element parse_element(char **line) {
@@ -115,16 +153,16 @@ Element parse_element(char **line) {
 }
 
 Element parse_input(U8 *input) {
-	Element pairs = { .type = ETYPE_LIST };
+	Element packets = { .type = ETYPE_LIST };
 
 	do {
 		char *line = arb_chop_by_delimiter((char**)&input, "\n");
 		if (*line == '\0') continue;
 		Element current = parse_element(&line);
-		arrput(pairs.data.list, current);
+		arrput(packets.data.list, current);
 	} while (*input != '\0');
 
-	return pairs;
+	return packets;
 }
 
 int main(int argc, char **argv) {
@@ -150,10 +188,10 @@ int main(int argc, char **argv) {
 
     fclose(fp);
 
-	Element pairs = parse_input(file_data);
+	Element packets = parse_input(file_data);
 
-    part_one(pairs);
-    part_two(pairs);
+    part_one(packets);
+    part_two(packets);
 
     return 0;
 }
