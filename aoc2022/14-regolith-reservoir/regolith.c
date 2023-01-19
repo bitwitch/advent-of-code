@@ -74,6 +74,28 @@ void move_particle(Particle *p, Rock *rocks) {
     Vec2i bottom_left  = { p->pos.x-1, p->pos.y+1 };
     Vec2i bottom_right = { p->pos.x+1, p->pos.y+1 };
 
+
+    if (!collide(rocks, bottom))
+        p->pos = bottom;
+    else if (!collide(rocks, bottom_left))
+        p->pos = bottom_left;
+    else if (!collide(rocks, bottom_right))
+        p->pos = bottom_right;
+    else
+        p->settled = true;
+}
+
+
+void move_particle_with_floor(Particle *p, Rock *rocks, int floor_height) {
+    Vec2i bottom       = { p->pos.x,   p->pos.y+1 };
+    Vec2i bottom_left  = { p->pos.x-1, p->pos.y+1 };
+    Vec2i bottom_right = { p->pos.x+1, p->pos.y+1 };
+
+    if (p->pos.y+1 == floor_height) {
+        p->settled = true;
+        return;
+    }
+
     if (!collide(rocks, bottom))
         p->pos = bottom;
     else if (!collide(rocks, bottom_left))
@@ -106,6 +128,23 @@ bool simulate(Rock *rocks, int *count) {
     return true;
 }
 
+bool simulate_with_floor(Rock *rocks, int floor_height, int *count) {
+    static Particle *p = NULL;
+
+    if (p == NULL || p->settled) {
+        p = spawn_particle();
+        *count += 1;
+    } else {
+        move_particle_with_floor(p, rocks, floor_height);
+        if (p->settled && p->pos.x == 500 && p->pos.y == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+
 void part_one(Rock *rocks) {
     int count = 0;
     for (bool running = true; running; running = simulate(rocks, &count));
@@ -113,8 +152,23 @@ void part_one(Rock *rocks) {
 }
 
 void part_two(Rock *rocks) {
-    (void)rocks;
-    printf("part_two: %d\n", 696969);
+    arrsetlen(particles, 0);
+
+    // get max floor height
+    int floor_height = 0;
+    for (int i=0; i<arrlen(rocks); ++i) {
+        for (int j=0; j<arrlen(rocks[i].vertices); ++j) {
+            int h = rocks[i].vertices[j].y;
+            if (h > floor_height) floor_height = h;
+        }
+    }
+
+    floor_height += 2;
+
+    int count = 0;
+    for (bool running = true; running; running = simulate_with_floor(rocks, floor_height, &count));
+
+    printf("part_two: %d\n", count);
 }
 
 
