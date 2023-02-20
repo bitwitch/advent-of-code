@@ -31,3 +31,6 @@
 
 #### [Day 12: Hill Climbing Algorithm](12-hill-climbing-algorithm)
 ![day 12 visualization](12-hill-climbing-algorithm/out.gif)
+
+#### [Day 14: Regolith Reservoir](14-regolith-reservoir)
+![day 14 visualization](14-regolith-reservoir/out.gif)

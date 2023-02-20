@@ -40,3 +40,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2022 Day 12: Hill Climbing Algorithm](aoc2022/12-hill-climbing-algorithm)
 ![2022 day 12 visualization](aoc2022/12-hill-climbing-algorithm/out.gif)
+
+#### [2022 Day 14: Regolith Reservoir](aoc2022/14-regolith-reservoir)
+![2022 day 14 visualization](aoc2022/14-regolith-reservoir/out.gif)
