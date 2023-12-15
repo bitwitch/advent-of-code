@@ -106,57 +106,7 @@ static oc_color colors[COLOR_COUNT] = {
 	[COLOR_WHITE]  = { 1, 1, 1, 1},
 };
 
-static i32 str_n_cmp(const char *_l, const char *_r, size_t n) {
-	const unsigned char *l=(void *)_l, *r=(void *)_r;
-	if (!n--) return 0;
-	for (; *l && *r && n && *l == *r ; l++, r++, n--);
-	return *l - *r;
-}
 
-static bool is_digit(int c) {
-	return c >= 48 && c <= 57;
-}
-
-static bool is_alpha(char c) {
-	return ((unsigned)c|32)-'a' < 26;
-}
-
-static bool is_space(char c) {
-	return c == ' ' || (unsigned)c-'\t' < 5;
-}
-
-static long str_to_l(char *str, char **out_end, int base) {
-	// TODO(shaw): handle bases other than 10
-	assert(base == 10);
-
-	while (is_space(*str)) ++str;
-
-	int sign = 1;
-	if (*str == '-') {
-		++str;
-		sign = -1;
-	}
-
-	char *start = str;
-	while (is_digit(*str)) {
-		++str;
-	}
-	char *end = str;
-	int digit_count = end - start;
-	int modifier = 1;
-	int result = 0;
-	for (int i=digit_count-1; i >= 0; --i) {
-		int digit = start[i] - '0';
-		result += digit * modifier;
-		modifier *= 10;
-	}
-
-	if (out_end != NULL) {
-		*out_end = end;
-	}
-
-	return sign * result;
-}
 
 static void next_token(void) {
 	// eat spaces
@@ -753,6 +703,8 @@ ORCA_EXPORT void oc_on_init(void) {
 	char *filename = "input.txt";
 	if (!read_entire_file(filename, &file_data, &file_size)) {
 		oc_log_error("failed to read file %s\n", filename);
+		oc_request_quit();
+		return;
 	}
 
 	init_stream(file_data);

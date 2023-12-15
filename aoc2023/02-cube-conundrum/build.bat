@@ -26,7 +26,7 @@ if not exist liborca.a (
    IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 )
 
-clang %wasm_flags% -o .\module.wasm  -L . -lorca "%src_dir%\cubes.c"
+clang -DORCA_MODE %wasm_flags% -o .\module.wasm  -L . -lorca "%src_dir%\cubes.c"
 IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 
 orca bundle --orca-dir %ORCA_DIR% --name "Cubes" --icon icon.png --resource-dir "%src_dir%\data" module.wasm

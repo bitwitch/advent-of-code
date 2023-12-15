@@ -1,19 +1,77 @@
 #include <orca.h>
 
-// char *chop_by_delimiter(char **str, char *delimiter) {
-    // char *chopped = *str;
+static i32 str_n_cmp(const char *_l, const char *_r, size_t n) {
+	const unsigned char *l=(void *)_l, *r=(void *)_r;
+	if (!n--) return 0;
+	for (; *l && *r && n && *l == *r ; l++, r++, n--);
+	return *l - *r;
+}
 
-    // char *found = strstr(*str, delimiter);
-    // if (found == NULL) {
-        // *str += strlen(*str);
-        // return chopped;
-    // }
+static bool is_digit(int c) {
+	return c >= 48 && c <= 57;
+}
 
-    // *found = '\0';
-    // *str = found + strlen(delimiter);
+static bool is_alpha(char c) {
+	return ((unsigned)c|32)-'a' < 26;
+}
 
-    // return chopped;
-// }
+static bool is_space(char c) {
+	return c == ' ' || (unsigned)c-'\t' < 5;
+}
+
+static long str_to_l(char *str, char **out_end, int base) {
+	// TODO(shaw): handle bases other than 10
+	assert(base == 10);
+
+	while (is_space(*str)) ++str;
+
+	int sign = 1;
+	if (*str == '-') {
+		++str;
+		sign = -1;
+	}
+
+	char *start = str;
+	while (is_digit(*str)) {
+		++str;
+	}
+	char *end = str;
+	int digit_count = end - start;
+	int modifier = 1;
+	int result = 0;
+	for (int i=digit_count-1; i >= 0; --i) {
+		int digit = start[i] - '0';
+		result += digit * modifier;
+		modifier *= 10;
+	}
+
+	if (out_end != NULL) {
+		*out_end = end;
+	}
+
+	return sign * result;
+}
+
+char *chop_by_delimiter(char **str, char *delimiter) {
+	// TODO(shaw): currently only supporting one character delimiters on orca
+	// because I don't want to have to implement a strstr right now
+	assert(strlen(delimiter) == 1);
+
+	char *chopped = *str;
+
+	char c = delimiter[0];
+	char *found = *str;
+	while (*found != c && *found != '\0') ++found;
+	if (*found == '\0') {
+		*str += strlen(*str);
+		return chopped;
+	}
+
+	*found = '\0';
+	*str = found + strlen(delimiter);
+
+	return chopped;
+}
 
 bool read_entire_file(char *filepath, char **out_data, u64 *out_size) {
 	oc_file file = oc_file_open(OC_STR8(filepath), OC_FILE_ACCESS_READ, OC_FILE_OPEN_NONE);
