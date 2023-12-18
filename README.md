@@ -8,9 +8,6 @@ generally increase in difficulty each day. It is a lot of fun.
 #### [2021 Day 9: Smoke Basin](aoc2021/09-smoke-basin)
 ![2021 day 9 visualization](aoc2021/09-smoke-basin/out.gif)
 
-#### [2021 Day 13: Transparent Oragami](aoc2021/13-transparent-origami)
-![2021 day 13 visualization](aoc2021/13-transparent-origami/out.png)  
-
 #### [2022 Day 3: Rucksack Reorganization](aoc2022/03-rucksack-reorganization)
 ![2022 day 3 visualization](aoc2022/03-rucksack-reorganization/out.gif)  
 
