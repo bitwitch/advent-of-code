@@ -43,3 +43,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2022 Day 14: Regolith Reservoir](aoc2022/14-regolith-reservoir)
 ![2022 day 14 visualization](aoc2022/14-regolith-reservoir/out.gif)
+
+#### [2023 Day 3: Gear Ratios](aoc2023/03-gear-ratios)
+![2023 day 3 visualization](aoc2023/03-gear-ratios/out.gif)
