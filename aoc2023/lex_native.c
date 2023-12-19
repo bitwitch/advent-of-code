@@ -18,7 +18,7 @@ typedef struct {
 	SourcePos pos;
     char *start, *end;
 	union {
-		uint64_t int_val;
+		U64 int_val;
         char *str_val;
         char *name;
 	};
@@ -64,7 +64,7 @@ repeat:
 		case '0': case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9': {
 			_token.kind = TOKEN_INT;
-			_token.int_val = strtol(_stream, &_stream, 10);
+			_token.int_val = strtoll(_stream, &_stream, 10);
 			break;
 		}
 
@@ -154,11 +154,11 @@ static bool match_token_name(char *name) {
 }
 
 
-static S64 parse_int(void) {
+static U64 parse_int(void) {
 	if (!is_token(TOKEN_INT)) {
 		fatal("Expected integer, got %s", token_kind_to_str(_token.kind));
 	}
-	S64 number = _token.int_val;
+	U64 number = _token.int_val;
 	next_token();
 	return number;
 }
