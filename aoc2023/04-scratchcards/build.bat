@@ -6,4 +6,4 @@ if "%1" == "gif" (
 ) else ( 
 	cl /Zi /W3 /nologo "%~dp0scratchcards.c"
 )
-popd build
+popd
