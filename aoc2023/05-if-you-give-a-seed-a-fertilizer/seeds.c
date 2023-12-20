@@ -92,12 +92,30 @@ U64 transform_element(Almanac *almanac, U64 src_val, ElementKind src_kind) {
 		U64 len = src_map->ranges[i].length;
 		U64 src_start = src_map->ranges[i].src_start;
 		U64 dst_start = src_map->ranges[i].dst_start;
-		if (src_val >= src_start && src_val <= src_start + len) {
+		if (src_val >= src_start && src_val < src_start + len) {
 			dst_val = (S64)(dst_start - src_start) + src_val;
 			break;
 		}
 	}
 	return dst_val;
+}
+
+U64 transform_element_reverse(Almanac *almanac, U64 dst_val, ElementKind dst_kind) {
+	ElementKind src_kind = dst_kind - 1;
+	assert(src_kind >= 0);
+	U64 src_val = dst_val;
+
+	ElementMap *src_map = &almanac->maps[src_kind];
+	for (int i=0; i<src_map->num_ranges; ++i) {
+		U64 len = src_map->ranges[i].length;
+		U64 src_start = src_map->ranges[i].src_start;
+		U64 dst_start = src_map->ranges[i].dst_start;
+		if (dst_val >= dst_start && dst_val < dst_start + len) {
+			src_val = (S64)(src_start - dst_start) + dst_val;
+			break;
+		}
+	}
+	return src_val;
 }
 
 U64 location_from_seed(Almanac *almanac, U64 seed) {
@@ -111,18 +129,48 @@ U64 location_from_seed(Almanac *almanac, U64 seed) {
 	return location;
 }
 
+U64 seed_from_location(Almanac *almanac, U64 location) {
+	U64 humidity = transform_element_reverse(almanac, location, ELEMENT_LOCATION);
+	U64 temp = transform_element_reverse(almanac, humidity, ELEMENT_HUMIDITY);
+	U64 light = transform_element_reverse(almanac, temp, ELEMENT_TEMP);
+	U64 water = transform_element_reverse(almanac, light, ELEMENT_LIGHT);
+	U64 fert = transform_element_reverse(almanac, water, ELEMENT_WATER);
+	U64 soil = transform_element_reverse(almanac, fert, ELEMENT_FERT);;
+	U64 seed = transform_element_reverse(almanac, soil, ELEMENT_SOIL);
+	return seed;
+}
+
+bool in_seed_ranges(Almanac *almanac, U64 seed) {
+	for (int i=0; i<almanac->num_seeds; i += 2) {
+		U64 start = almanac->seeds[i];
+		U64 len = almanac->seeds[i+1];
+		if (seed >= start && seed < start + len) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void part_one(Almanac *almanac) {
 	U64 min = UINT64_MAX;
 	for (int i=0; i<almanac->num_seeds; ++i) {
 		U64 location = location_from_seed(almanac, almanac->seeds[i]);
 		if (location < min) min = location;
-		printf("seed[%d] %llu -> %llu\n", i, almanac->seeds[i], location);
+		// printf("seed[%d] %llu -> %llu\n", i, almanac->seeds[i], location);
 	}
 	printf("Part one: %llu\n", min);
 }
 
 void part_two(Almanac *almanac) {
-	(void)almanac;
+	for (U64 location=0; location<UINT64_MAX; ++location) {
+		U64 seed = seed_from_location(almanac, location);
+		if (in_seed_ranges(almanac, seed)) {
+			printf("Part two: %llu\n", location);
+			return;
+		}
+	}
+
+	printf("Part two: no seed found\n");
 }
 
 int main(int argc, char **argv) {
