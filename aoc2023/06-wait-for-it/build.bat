@@ -6,8 +6,8 @@ setlocal enabledelayedexpansion
 set ORCA_DIR=C:\Users\Ian\code\third-party\orca
 set STDLIB_DIR=%ORCA_DIR%\src\libc-shim
 
-set "src_dir=%~dp0"
-set "src_dir=!src_dir:~0,-1!"
+set "SRC_DIR=%~dp0"
+set "SRC_DIR=!SRC_DIR:~0,-1!"
 
 set wasm_flags=--target=wasm32^
 	--no-standard-libraries ^
@@ -30,15 +30,15 @@ if "%1" == "game" (
 		)
 	)
 
-	clang -DORCA_MODE %wasm_flags% -o .\module.wasm  -L . -lorca "%src_dir%\race_game.c"
+	clang -DORCA_MODE %wasm_flags% -o .\module.wasm  -L . -lorca "%SRC_DIR%\race_game.c"
 	IF %ERRORLEVEL% NEQ 0 (
 		popd
 		EXIT /B %ERRORLEVEL%
 	)
 
-	orca bundle --orca-dir %ORCA_DIR% --name "Game" --icon icon.png --resource-dir "%src_dir%\data" module.wasm
+	orca bundle --orca-dir %ORCA_DIR% --name "Game" --icon icon.png --resource-dir "%SRC_DIR%\data" module.wasm
 
 ) else ( 
-	cl /Zi /W3 /nologo "%~dp0race.c"
+	cl /Zi /W3 /nologo "%SRC_DIR%\race.c"
 )
 popd 
