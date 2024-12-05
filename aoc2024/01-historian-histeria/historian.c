@@ -7,12 +7,12 @@
 #define SCREEN_HEIGHT 1024
 
 typedef struct {
-	int x, y, target_x, target_y;
+	F32 x, y, target_x, target_y;
 	S64 num;
 } Cell;
 
 typedef struct {
-	int center_x, center_y;
+	F32 center_x, center_y;
 	int w, h;
 	int target_w;
 } Bar;
@@ -41,6 +41,10 @@ static int compare_s64(const void* a, const void* b) {
 static int lerp(int a, int b, float t) {
 	return a + (int)(t * (b - a));
 }
+static F32 lerpf(F32 a, F32 b, F32 t) {
+	return a + t * (b - a);
+}
+
 
 static void part_one(S64 *nums1, S64 *nums2) {
 	U64 sum = 0;
@@ -73,48 +77,48 @@ static void part_two(S64 *nums1, S64 *nums2) {
 	printf("part two: %llu\n", similarity);
 }
 
-static void draw_cells(BUF(Cell *cells), int font_size) {
+static void draw_cells(BUF(Cell *cells), int font_size, U32 color, float scroll_y) {
 	int cell_width = font_size * 8;
 	int cell_height = font_size * 12;
 	for (S64 i=0; i<buf_len(cells); ++i) {
 		Cell cell = cells[i];
+		int y = (int)(cell.y - scroll_y);
 
-		if (cell.x < SCREEN_WIDTH && cell.y < SCREEN_HEIGHT) {
-			drawstringf(cell.x, cell.y, font_size, 0xFF0000FF, "%lld", cell.num);  
-			// strokebox(cell.x, cell.y, cell_width, cell_height, 1, 0xFF00FF00);
+		if (cell.x < SCREEN_WIDTH && y < SCREEN_HEIGHT && y > -cell_height) {
+			drawstringf((int)cell.x, y, font_size, color, "%lld", cell.num);  
 		}
 	}
 }
 
-static void draw_bars(BUF(Bar *bars)) {
+static void draw_bars(BUF(Bar *bars), U32 color, float scroll_y) {
 	for (S64 i=0; i<buf_len(bars); ++i) {
 		Bar bar = bars[i];
-		int x = bar.center_x - bar.w/2;
-		int y = bar.center_y - bar.h/2;
+		int x = (int)(bar.center_x - bar.w/2.0f);
+		int y = (int)(bar.center_y - bar.h/2.0f - scroll_y);
 
-		if (x < SCREEN_WIDTH && y < SCREEN_HEIGHT) {
+		if (x < SCREEN_WIDTH && y < SCREEN_HEIGHT && y > -bar.h) {
 			drawbox(x, y, bar.w, bar.h, 0xFF00FF00);
 		}
 	}
 }
 
-static void grow_bars(BUF(Bar *bars)) {
+static void grow_bars(BUF(Bar *bars), float t) {
 	for (S64 i=0; i<buf_len(bars); ++i) {
 		Bar bar = bars[i];
-		bars[i].w = lerp(bar.w, bar.target_w, 0.33f);
+		bars[i].w = lerp(bar.w, bar.target_w, t);
 	}
 }
 
-static void move_cells(BUF(Cell *cells)) {
+static void move_cells(BUF(Cell *cells), float t) {
 	for (S64 i=0; i<buf_len(cells); ++i) {
 		Cell cell = cells[i];
-		cells[i].x = lerp(cell.x, cell.target_x, .24f);
-		cells[i].y = lerp(cell.y, cell.target_y, .24f);
+		cells[i].x = lerpf(cell.x, cell.target_x, t);
+		cells[i].y = lerpf(cell.y, cell.target_y, t);
 	}
 }
 
-static void visualize(BUF(S64 *nums1), BUF(S64 *nums2), int font_size, int pad_left, int pad_top, int max_bar_width) {
-    setupgif(0, 1, "historian.gif");
+static void visualize_small(BUF(S64 *nums1), BUF(S64 *nums2), int font_size, int pad_left, int pad_top, int max_bar_width) {
+    setupgif(0, 1, "historian_small.gif");
 
 	// generate "cells"
 	int cell_width = font_size * 8;
@@ -134,20 +138,20 @@ static void visualize(BUF(S64 *nums1), BUF(S64 *nums2), int font_size, int pad_l
 	for (int i=0; i<buf_len(list1); ++i) {
 		NumIndex item = list1[i];
 		buf_push(cells, (Cell){
-			.x = pad_left,
-			.y = item.start_index * cell_height + pad_top,
-			.target_x = pad_left,
-			.target_y = i * cell_height + pad_top,
+			.x = (F32)pad_left,
+			.y = (F32)item.start_index * cell_height + pad_top,
+			.target_x = (F32)pad_left,
+			.target_y = (F32)i * cell_height + pad_top,
 			.num = item.num,
 		});
 	}
 	for (int i=0; i<buf_len(list2); ++i) {
 		NumIndex item = list2[i];
 		buf_push(cells, (Cell){
-			.x = pad_left + 9 * cell_width,
-			.y = item.start_index * cell_height + pad_top,
-			.target_x = pad_left + 9 * cell_width,
-			.target_y = i * cell_height + pad_top,
+			.y = (F32)item.start_index * cell_height + pad_top,
+			.x = pad_left + 9.0f * cell_width,
+			.target_x = pad_left + 9.0f * cell_width,
+			.target_y = (F32)i * cell_height + pad_top,
 			.num = item.num,
 		});
 	}
@@ -162,7 +166,7 @@ static void visualize(BUF(S64 *nums1), BUF(S64 *nums2), int font_size, int pad_l
 		NumIndex n2 = list2[i];
 		Bar bar = {0};
 		bar.center_x = SCREEN_WIDTH / 2;
-		bar.center_y = pad_top + (i*cell_height) + (bar_height/2);
+		bar.center_y = pad_top + (i*cell_height) + (bar_height/2.0f);
 		bar.w = 0;
 		bar.h = bar_height;
 		bar.target_w = abs((int)(n2.num - n1.num)) * bar_unit_width;
@@ -177,31 +181,171 @@ static void visualize(BUF(S64 *nums1), BUF(S64 *nums2), int font_size, int pad_l
 	}
 
 	S64 frames = 0;
+	U32 cell_color = 0xFF0000FF;
 
 	// draw unsorted lists
-	for (frames = 0; frames < 5; ++frames) {
-		draw_cells(cells, font_size);
+	for (frames = 0; frames < 50; ++frames) {
+		draw_cells(cells, font_size, cell_color, 0);
 		nextframe();
 	}
 
 	// draw transition to sorted lists
-	for (frames = 0; frames < 20; ++frames) {
+	for (frames = 0; frames < 69; ++frames) {
 		clear();
-		draw_cells(cells, font_size);
-		move_cells(cells);
+		draw_cells(cells, font_size, cell_color, 0);
+		move_cells(cells, 0.17f);
 		nextframe();
 	}
 
 	// draw diff bars
-	for (frames = 0; frames < 30; ++frames) {
+	U32 bar_color = 0xFF00FF00;
+	for (frames = 0; frames < 80; ++frames) {
 		clear();
 
-		draw_cells(cells, font_size);
-		draw_bars(bars);
+		draw_cells(cells, font_size, cell_color, 0);
+		draw_bars(bars, bar_color, 0);
 
-		move_cells(cells);
-		grow_bars(bars);
+		move_cells(cells, 0.17f);
+		grow_bars(bars, 0.19f);
 
+		nextframe();
+	}
+
+	// black frames
+	clear();
+	for (frames = 0; frames < 20; ++frames) {
+		nextframe();
+	}
+
+    endgif();
+}
+
+static void visualize_large(BUF(S64 *nums1), BUF(S64 *nums2), int font_size, int pad_left, int pad_top, int max_bar_width) {
+    setupgif(0, 1, "historian_large.gif");
+
+	// generate "cells"
+	int cell_width = font_size * 8;
+	int cell_height = font_size * 12;
+	BUF(NumIndex *list1) = NULL;
+	BUF(NumIndex *list2) = NULL;
+	for (int i=0; i<buf_len(nums1); ++i) {
+		buf_push(list1, (NumIndex){ nums1[i], i });
+	}
+	for (int i=0; i<buf_len(nums2); ++i) {
+		buf_push(list2, (NumIndex){ nums2[i], i });
+	}
+	qsort(list1, buf_len(list1), sizeof(NumIndex), compare_num_index);
+	qsort(list2, buf_len(list2), sizeof(NumIndex), compare_num_index);
+
+	BUF(Cell *cells) = NULL;
+	for (int i=0; i<buf_len(list1); ++i) {
+		NumIndex item = list1[i];
+		buf_push(cells, (Cell){
+			.x = (F32)pad_left,
+			.y = (F32)item.start_index * cell_height + pad_top,
+			.target_x = (F32)pad_left,
+			.target_y = (F32)i * cell_height + pad_top,
+			.num = item.num,
+		});
+	}
+	for (int i=0; i<buf_len(list2); ++i) {
+		NumIndex item = list2[i];
+		buf_push(cells, (Cell){
+			.y = (F32)item.start_index * cell_height + pad_top,
+			.x = pad_left + 900.0f,
+			.target_x = pad_left + 900.0f,
+			// .x = pad_left + 9 * cell_width,
+			// .target_x = pad_left + 9 * cell_width,
+			.target_y = (F32)i * cell_height + pad_top,
+			.num = item.num,
+		});
+	}
+
+	// generate "bars"
+	int bar_unit_width = cell_width;
+	int bar_height = cell_height - 2;
+	int longest = 0;
+	BUF(Bar *bars) = NULL;
+	for (int i=0; i<buf_len(list1); ++i) {
+		NumIndex n1 = list1[i];
+		NumIndex n2 = list2[i];
+		Bar bar = {0};
+		bar.center_x = SCREEN_WIDTH / 2;
+		bar.center_y = pad_top + (i*cell_height) + (bar_height/2.0f);
+		bar.w = 0;
+		bar.h = bar_height;
+		bar.target_w = abs((int)(n2.num - n1.num)) * bar_unit_width;
+		if (bar.target_w > longest) longest = bar.target_w;
+		buf_push(bars, bar);
+	}
+
+	// scale bars to screen
+	float bar_scale_ratio = (float)max_bar_width / (float)longest;
+	for (int i=0; i<buf_len(bars); ++i) {
+		bars[i].target_w = (int)(bars[i].target_w * bar_scale_ratio);
+	}
+
+	for (int i=0; i<buf_len(cells); ++i) {
+		cells[i].x = cells[i].target_x;
+		cells[i].y = cells[i].target_y;
+	}
+	// for (int i=0; i<buf_len(bars); ++i) {
+		// bars[i].w = bars[i].target_w;
+	// }
+
+	S64 frames = 0;
+	int stationary_frames = 25;
+	int fade_frames = 25;
+	U32 cell_color = 0x000000FF;
+	U32 bar_color = 0x0000FF00;
+
+	// draw stationary
+	clear();
+	draw_cells(cells, font_size, cell_color, 0);
+	draw_bars(bars, bar_color, 0);
+	for (frames = 0; frames < stationary_frames; ++frames) {
+		nextframe();
+	}
+
+	// grow bars
+	for (frames = 0; frames < 60; ++frames) {
+		clear();
+		draw_cells(cells, font_size, cell_color, 0);
+		draw_bars(bars, bar_color, 0);
+		grow_bars(bars, 0.069f);
+		nextframe();
+	}
+
+	// scroll
+	frames = 0;
+	int skip_frames = 1;
+	int list_height = cell_height * buf_len(nums1);
+	float scroll_y = 0;
+	for (scroll_y = 0; scroll_y < list_height - SCREEN_HEIGHT; scroll_y += 25.0f) {
+		clear();
+		draw_cells(cells, font_size, cell_color, scroll_y);
+		draw_bars(bars, bar_color, scroll_y);
+
+		if (frames > 800) {
+			skip_frames = 5;
+		} else if (frames > 400) {
+			skip_frames = 4;
+		} else if (frames > 200) {
+			skip_frames = 3;
+		} else if (frames > 100) {
+			skip_frames = 2;
+		} 
+		if ((frames++ % skip_frames) == 0) {
+			nextframe();
+		}
+	}
+	printf("%lld frames in scroll\n", frames);
+
+	// draw stationary
+	for (frames = 0; frames < stationary_frames; ++frames) {
+		// clear();
+		// draw_cells(cells, font_size, scroll_y);
+		// draw_bars(bars, scroll_y);
 		nextframe();
 	}
 
@@ -248,17 +392,17 @@ int main(int argc, char **argv) {
 	part_one(nums1_sorted, nums2_sorted);
 	part_two(nums1_sorted, nums2_sorted);
 
-	int font_size = 12;
-	int pad_left = 32;
-	int pad_top = 75;
-	int max_bar_width = 700;
-
-	// int font_size = 1;
-	// int pad_left = 1;
-	// int pad_top = 1;
+	// int font_size = 12;
+	// int pad_left = 32;
+	// int pad_top = 75;
 	// int max_bar_width = 700;
+	// visualize_small(nums1, nums2, font_size, pad_left, pad_top, max_bar_width);
 
-	visualize(nums1, nums2, font_size, pad_left, pad_top, max_bar_width);
+	int font_size = 2;
+	int pad_left = 25;
+	int pad_top = 1;
+	int max_bar_width = 700;
+	visualize_large(nums1, nums2, font_size, pad_left, pad_top, max_bar_width);
 
 	return 0;
 }
