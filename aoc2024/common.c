@@ -370,3 +370,37 @@ char *str_intern_range(char *start, char *end) {
 char *str_intern(char *str) {
     return str_intern_range(str, str + strlen(str));
 }
+
+
+// PCG random number generator taken from https://en.wikipedia.org/wiki/Permuted_congruential_generator
+static U64 _rand_state            = 0x4d595df4d0f33173;   // Or something seed-dependent
+static U64 const _rand_multiplier = 6364136223846793005u;
+static U64 const _rand_increment  = 1442695040888963407u;	// Or an arbitrary odd constant
+
+static U32 rotr32(U32 x, unsigned r) {
+	return x >> r | x << (-r & 31);
+}
+
+U32 pcg32(void) {
+	U64 x = _rand_state;
+	unsigned count = (unsigned)(x >> 59);   // 59 = 64 - 5
+
+	_rand_state = x * _rand_multiplier + _rand_increment;
+	x ^= x >> 18;                           // 18 = (64 - 27)/2
+	return rotr32((U32)(x >> 27), count);   // 27 = 32 - 5
+}
+
+void pcg32_init(U64 seed) {
+	_rand_state = seed + _rand_increment;
+	(void)pcg32();
+}
+
+U32 rand_range_u32(U32 min, U32 max) {
+	U32 range = max - min + 1;
+	return min + (pcg32() % range);
+}
+
+F32 rand_f32(void) {
+	return (F32)((F64)pcg32() / (F64)UINT32_MAX);
+}
+

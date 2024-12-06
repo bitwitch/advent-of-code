@@ -46,3 +46,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2024 Day 1: Historian Hysteria](aoc2024/01-historian-hysteria)
 ![2024 day 1 visualization](aoc2024/01-historian-hysteria/out.gif)
+
+#### [2024 Day 2: Red-Nosed Reports](aoc2024/02-red-nosed-reports)
+![2024 day 2 visualization](aoc2024/02-red-nosed-reports/out.gif)
