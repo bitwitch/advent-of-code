@@ -377,8 +377,8 @@ static U64 _rand_state            = 0x4d595df4d0f33173;   // Or something seed-d
 static U64 const _rand_multiplier = 6364136223846793005u;
 static U64 const _rand_increment  = 1442695040888963407u;	// Or an arbitrary odd constant
 
-static U32 rotr32(U32 x, unsigned r) {
-	return x >> r | x << (-r & 31);
+static U32 rotr32(U32 x, U32 r) {
+	return x >> r | x << ((U32)(-(S32)r) & 31);
 }
 
 U32 pcg32(void) {
