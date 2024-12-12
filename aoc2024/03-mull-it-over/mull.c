@@ -13,6 +13,7 @@
 #define BLACK      0xFF1D201D
 #define PALE_SKIN  0xFF9AC3EE
 #define BROWN      0xFF2B4189
+#define DARK_BROWN 0xFF041952 
 #define ORANGE     0xFF3363BC
 #define WHITE      0xFFF7F5EA
 #define GOLD       0xFF15B4EC
@@ -137,18 +138,40 @@ void draw_bg(void) {
 	}
 	
 	{ // computer
-		int comp_width = 600;
-		int comp_height = 700;
-		int screen_pad = 30;
 		int pad = 20;
-		drawbox(pad, pad, comp_width, comp_height, RED);
-		drawbox(pad+screen_pad, pad+screen_pad, 
-			comp_width - 2*screen_pad,
-			comp_height - 2*screen_pad, 
-			BLACK);
+		int width = 600;
+		int top_height = 132;
+		int bot_pad = 15;
+		int bot_height = 700 - top_height - bot_pad;
+		int bot_y = pad + top_height+bot_pad;
+		int top_screen_pad = 30;
+		int bot_screen_pad = 30;
 
+		drawbox(pad, pad, width, top_height, RED);
+		drawbox(pad+top_screen_pad, pad+top_screen_pad, 
+			width - 2*top_screen_pad,
+			top_height - 2*top_screen_pad, 
+			BLACK);
 		draw_shiny_corner(pad, pad, 0);
-		draw_shiny_corner(pad+comp_width, pad, 1);
+		draw_shiny_corner(pad+width, pad, 1);
+		draw_shiny_corner(pad+width, pad+top_height, 2);
+		draw_shiny_corner(pad, pad+top_height, 3);
+
+		drawbox(pad, bot_y, width, bot_height, RED);
+		drawbox(pad+bot_screen_pad, bot_y+bot_screen_pad, 
+			width - 2*bot_screen_pad,
+			bot_height - 2*bot_screen_pad, 
+			BLACK);
+		draw_shiny_corner(pad, bot_y, 0);
+		draw_shiny_corner(pad+width, bot_y, 1);
+		draw_shiny_corner(pad+width, bot_y+bot_height, 2);
+		draw_shiny_corner(pad, bot_y+bot_height, 3);
+
+		int feet_width = 55;
+		int feet_space = 40;
+		drawbox(pad+feet_space, pad+top_height, feet_width, 15, DARK_BROWN);
+		drawbox(pad+width-feet_width-feet_space, pad+top_height, feet_width, 15, DARK_BROWN);
+
 	}
 	
 	{ // memory view
@@ -293,56 +316,113 @@ void draw_memory(char *text) {
 #undef NUM_COLS 
 }
 
-void draw_computer(void) {
-	char *tmp = "mul(2,4)x?!xmultmul";
-	int start_x = 65;
-	int start_y = 65;
-	int x = start_x;
-	int y = start_y;
-	int font_size = 3;
-	drawstringn(tmp, x, y, font_size, TEXT_GREEN);
+typedef struct {
+	char *stream;
+	U64 sum;
+	char **lines;
+	int num_lines;
+} Display;
 
+void draw_computer(Display *display) {
+	int top_x = 65;
+	int top_y = 65;
+	int font_size = 3;
+	int max_cols = 21;
+
+	drawstringf(top_x, top_y, font_size, TEXT_GREEN, "%.*s", max_cols, display->stream);
+
+	// draw mul lines
+	int x = 65;
+	int start_y = 215;
+	int last = display->num_lines;
+	int max_lines = last < 10 ? last : 10;
+
+	for (int i=0; i<max_lines; ++i) {
+		int row = max_lines - i - 1;
+		int y = start_y + row*12*font_size;
+		drawstringf(x, y, font_size, TEXT_GREEN, "%.*s", max_cols, display->lines[last-1-i]);
+	}
+
+	// int row = max_lines-1;
+	// for (int i=display->num_lines; i>0 && i>display->num_lines - max_lines; --i) {
+		// int y = start_y + row*12*font_size;
+		// drawstringf(x, y, font_size, TEXT_GREEN, "%.*s", max_cols, display->lines[i-1]);
+		// --row;
+	// }
+
+	// draw sum
+	int sum_digits = 8;
+	drawstringf(224, 636, font_size, TEXT_GREEN, "sum = %*d", sum_digits, display->sum);
 }
 
 void visualize(char *file_name, char *file_data) {
     setupgif(0, 1, "mull.gif");
+	init_lexer(file_name, file_data);
+
+	Display display = {0};
+	display.stream = file_data;
+	display.sum = 0;
+
+	bool enabled = true;
 
 	clear();
 	draw_bg();
 	nextframe();
 
-	init_lexer(file_name, file_data);
-	S64 result = 0;
-	bool enabled = true;
-
 	U64 frames = 0;
-	while (frames < 50) {
-		// while (!is_token(TOKEN_EOF)) {
-			// if (is_mul()) {
-				// Mul mul = parse_mul();
-				// if (enabled) result += mul.result;
-			// } else if (match_do()) {
-				// enabled = true;
-			// } else if (match_dont()) {
-				// enabled = false;
-			// } else {
-				// _stream = _token.start + 1;
-				// next_token();
-			// }
+	U64 skipframes = 1;
+	while (!is_token(TOKEN_EOF)) {
+		LexState start_state = get_lex_state();
+		if (is_mul()) {
+			Mul mul = parse_mul();
+			if (enabled) {
+				char *line = xmalloc(64 * sizeof(char));
+				snprintf(line, 64, "mul(%3lld,%3lld) =%7lld", mul.op1, mul.op2, mul.result);
+				buf_push(display.lines, line);
+				display.num_lines = buf_len(display.lines);
+				display.sum += mul.result;
+			}
+			start_state.stream += 1;
+			set_lex_state(start_state);
+			next_token();
+		} else if (match_do()) {
+			enabled = true;
+			start_state.stream += 1;
+			set_lex_state(start_state);
+			next_token();
+		} else if (match_dont()) {
+			enabled = false;
+			start_state.stream += 1;
+			set_lex_state(start_state);
+			next_token();
+		} else {
+			// start_state.stream += 1;
+			// set_lex_state(start_state);
+			// display.stream = start_state.stream;
+			_stream = _token.start + 1;
+			next_token();
+		}
+
+		display.stream = _stream;
+
+		// start_state.stream += 1;
+		// set_lex_state(start_state);
+		// display.stream = start_state.stream;
+		// next_token();
+
+		// if ((++frames % skipframes) == 0) {
+			clear();
+			draw_bg();
+			draw_memory(display.stream);
+			draw_computer(&display);
+			nextframe();
 		// }
-
-		clear();
-		draw_bg();
-		draw_memory(_stream);
-		draw_computer();
-
-		++frames;
-		nextframe();
 	}
+
+	for (int i=0; i<25; ++i) nextframe();
+
 	endgif();
 }
-
-
 
 int main(int argc, char **argv) {
 	if (argc < 2) {
