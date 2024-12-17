@@ -3,6 +3,12 @@
 [Advent of Code](https://adventofcode.com) is an Advent calendar of programming puzzles. The puzzles  
 generally increase in difficulty each day. It is a lot of fun.  
 
+### Events
+#### [2024](aoc2024)
+#### [2023](aoc2023)
+#### [2022](aoc2022)
+#### [2021](aoc2021)
+
 ### Visualizations
 
 #### [2021 Day 9: Smoke Basin](aoc2021/09-smoke-basin)
