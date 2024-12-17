@@ -8,3 +8,6 @@
 #### [Day 2: Red-Nosed Reports](02-red-nosed-reports)
 ![day 2 visualization](02-red-nosed-reports/out.gif)
 
+#### [Day 3: Mull It Over](03-mull-it-over)
+![day 3 visualization](03-mull-it-over/out.gif)
+

@@ -49,3 +49,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2024 Day 2: Red-Nosed Reports](aoc2024/02-red-nosed-reports)
 ![2024 day 2 visualization](aoc2024/02-red-nosed-reports/out.gif)
+
+#### [2024 Day 3: Mull It Over](aoc2024/03-mull-it-over)
+![2024 day 3 visualization](aoc2024/03-mull-it-over/out.gif)

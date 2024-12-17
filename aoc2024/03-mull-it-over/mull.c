@@ -3,20 +3,30 @@
 #include "..\..\base\base_inc.h"
 #include "..\..\base\base_inc.c"
 
-#define SCREEN_WIDTH  1024
-#define SCREEN_HEIGHT 1024
+#define RED             0xFF3232AC 
+#define DARK_RED        0xFF1D1D8C
+#define GREEN           0xFF34A82E
+#define TEXT_GREEN      0xFF7FEA8A
+#define BLACK           0xFF1D201D
+#define PALE_SKIN       0xFF9AC3EE
+#define BROWN           0xFF2B4189
+#define DARK_BROWN      0xFF041952 
+#define ORANGE          0xFF3363BC
+#define WHITE           0xFFF7F5EA
+#define GOLD            0xFF15B4EC
 
-#define RED        0xFF3232AC 
-#define DARK_RED   0xFF1D1D8C
-#define GREEN       0xFF34A82E
-#define TEXT_GREEN 0xFF7FEA8A
-#define BLACK      0xFF1D201D
-#define PALE_SKIN  0xFF9AC3EE
-#define BROWN      0xFF2B4189
-#define DARK_BROWN 0xFF041952 
-#define ORANGE     0xFF3363BC
-#define WHITE      0xFFF7F5EA
-#define GOLD       0xFF15B4EC
+#define GREEN_LIGHT_ON_HIGHLIGHT  0xFFF8FEDC
+#define GREEN_LIGHT_ON            0xFF2EFC00
+#define GREEN_LIGHT_OFF           0xFF445E47
+#define RED_LIGHT_ON_HIGHLIGHT    0xFF03EDFF
+#define RED_LIGHT_ON              0xFF0100EA
+#define RED_LIGHT_OFF             0xFF313169 
+
+#define SCREEN_WIDTH      1024
+#define SCREEN_HEIGHT     1024
+#define COMP_TOP_X        65
+#define COMP_TOP_Y        65
+#define COMP_FONT_SIZE    3
 
 typedef struct {
 		Token token;
@@ -319,40 +329,54 @@ void draw_memory(char *text) {
 typedef struct {
 	char *stream;
 	U64 sum;
+	bool mul_enabled;
+	bool highlight_current;
+	int highlight_count; // num chars in expression to highlight
 	char **lines;
 	int num_lines;
 } Display;
 
 void draw_computer(Display *display) {
-	int top_x = 65;
-	int top_y = 65;
-	int font_size = 3;
+	// draw input view in top computer screen
 	int max_cols = 21;
+	drawstringf(COMP_TOP_X, COMP_TOP_Y, COMP_FONT_SIZE, TEXT_GREEN, "%.*s", max_cols, display->stream);
 
-	drawstringf(top_x, top_y, font_size, TEXT_GREEN, "%.*s", max_cols, display->stream);
+	if (display->highlight_current) {
+		drawstringf(COMP_TOP_X, COMP_TOP_Y, COMP_FONT_SIZE, GOLD, "%.*s", display->highlight_count, display->stream);
+	}
+
+	// draw enabled/disabled lights
+	int light_x = COMP_TOP_X + 10;
+	int light_y = COMP_TOP_Y + 72;
+	int light_r = 12;
+	int off_x = 2 * light_r + 10;
+	drawcircle(light_x, light_y, light_r, BLACK);
+	drawcircle(light_x + off_x, light_y, light_r, BLACK);
+	light_r = 9;
+	if (display->mul_enabled) {
+		drawcircle(light_x, light_y, light_r, GREEN_LIGHT_ON);
+		drawcircle(light_x, light_y, 4, GREEN_LIGHT_ON_HIGHLIGHT);
+		drawcircle(light_x + off_x, light_y, light_r, RED_LIGHT_OFF);
+	} else {
+		drawcircle(light_x, light_y, light_r, GREEN_LIGHT_OFF);
+		drawcircle(light_x + off_x, light_y, light_r, RED_LIGHT_ON);
+		drawcircle(light_x + off_x, light_y, 4, RED_LIGHT_ON_HIGHLIGHT);
+	}
 
 	// draw mul lines
 	int x = 65;
 	int start_y = 215;
 	int last = display->num_lines;
 	int max_lines = last < 10 ? last : 10;
-
 	for (int i=0; i<max_lines; ++i) {
 		int row = max_lines - i - 1;
-		int y = start_y + row*12*font_size;
-		drawstringf(x, y, font_size, TEXT_GREEN, "%.*s", max_cols, display->lines[last-1-i]);
+		int y = start_y + row*12*COMP_FONT_SIZE;
+		drawstringf(x, y, COMP_FONT_SIZE, TEXT_GREEN, "%.*s", max_cols, display->lines[last-1-i]);
 	}
-
-	// int row = max_lines-1;
-	// for (int i=display->num_lines; i>0 && i>display->num_lines - max_lines; --i) {
-		// int y = start_y + row*12*font_size;
-		// drawstringf(x, y, font_size, TEXT_GREEN, "%.*s", max_cols, display->lines[i-1]);
-		// --row;
-	// }
 
 	// draw sum
 	int sum_digits = 8;
-	drawstringf(224, 636, font_size, TEXT_GREEN, "sum = %*d", sum_digits, display->sum);
+	drawstringf(224, 636, COMP_FONT_SIZE, TEXT_GREEN, "sum = %*d", sum_digits, display->sum);
 }
 
 void visualize(char *file_name, char *file_data) {
@@ -362,64 +386,79 @@ void visualize(char *file_name, char *file_data) {
 	Display display = {0};
 	display.stream = file_data;
 	display.sum = 0;
-
-	bool enabled = true;
+	display.mul_enabled = true;
 
 	clear();
 	draw_bg();
 	nextframe();
 
 	U64 frames = 0;
-	U64 skipframes = 1;
+	U64 skip_frames = 1;
+
 	while (!is_token(TOKEN_EOF)) {
 		LexState start_state = get_lex_state();
+		U64 freeze_frames = 0;
+		display.highlight_current = false;
 		if (is_mul()) {
 			Mul mul = parse_mul();
-			if (enabled) {
+			if (display.mul_enabled) {
 				char *line = xmalloc(64 * sizeof(char));
 				snprintf(line, 64, "mul(%3lld,%3lld) =%7lld", mul.op1, mul.op2, mul.result);
 				buf_push(display.lines, line);
 				display.num_lines = buf_len(display.lines);
 				display.sum += mul.result;
+				display.highlight_current = true;
+				display.highlight_count = (int)(_token.start - start_state.token.start);
+				freeze_frames = 2;
 			}
-			start_state.stream += 1;
-			set_lex_state(start_state);
-			next_token();
 		} else if (match_do()) {
-			enabled = true;
-			start_state.stream += 1;
-			set_lex_state(start_state);
-			next_token();
+			display.mul_enabled = true;
+			display.highlight_current = true;
+			display.highlight_count = (int)(_token.start - start_state.token.start);
+			freeze_frames = 2;
 		} else if (match_dont()) {
-			enabled = false;
-			start_state.stream += 1;
-			set_lex_state(start_state);
-			next_token();
+			display.mul_enabled = false;
+			display.highlight_current = true;
+			display.highlight_count = (int)(_token.start - start_state.token.start);
+			freeze_frames = 2;
 		} else {
-			// start_state.stream += 1;
-			// set_lex_state(start_state);
-			// display.stream = start_state.stream;
-			_stream = _token.start + 1;
+			start_state.stream = start_state.token.start + 1;
+			set_lex_state(start_state);
 			next_token();
 		}
 
-		display.stream = _stream;
+		display.stream = start_state.token.start;
 
-		// start_state.stream += 1;
-		// set_lex_state(start_state);
-		// display.stream = start_state.stream;
-		// next_token();
+		switch (frames) {
+			case 100:   skip_frames = 6;   break;
+			case 520:   skip_frames = 24;  break;
+			case 1400:  skip_frames = 200; break;
+			case 4000:  skip_frames = 250; break;
+			case 10900: skip_frames = 6;   break;
+			case 11050: skip_frames = 1;   break;
+			default: break;
+		}
 
-		// if ((++frames % skipframes) == 0) {
+		if (frames > 520 && frames < 10900) {
+			freeze_frames = 0;
+		}
+
+		if ((frames++ % skip_frames) == 0) {
 			clear();
 			draw_bg();
-			draw_memory(display.stream);
+			draw_memory(_stream);
 			draw_computer(&display);
 			nextframe();
-		// }
+			// do freeze frames
+			for (; freeze_frames > 0; --freeze_frames) nextframe();
+		}
 	}
 
-	for (int i=0; i<25; ++i) nextframe();
+	clear();
+	draw_bg();
+	draw_memory(_stream);
+	draw_computer(&display);
+	for (int i=0; i<20; ++i) nextframe();
 
 	endgif();
 }
