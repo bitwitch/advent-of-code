@@ -1,5 +1,16 @@
 #include "../common.c"
 #include "../lex.c"
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
+
+#define SCREEN_WIDTH  1024
+#define SCREEN_HEIGHT 1024
+
+#define WHITE 0xFFFFFFFF
+#define ROW_HEIGHT 112
+#define ROW_WIDTH  100
+#define UNIT 2
+#define PAD 2
 
 typedef struct {
 	U64 x, y;
@@ -95,6 +106,31 @@ void part_two(BUF(Rule *rules), BUF(U64 **updates)) {
 	printf("part two: %llu\n", sum);
 }
 
+void draw_updates(BUF(U64 **updates)) {
+	int num_rows = (int)(SCREEN_HEIGHT / ROW_HEIGHT);
+	for (int j=0; j<buf_len(updates); ++j) {
+		int y = (j % num_rows) * ROW_HEIGHT;
+		int off_x = (j / num_rows) * (int)ROW_WIDTH;
+		for (int i=0; i<buf_len(updates[j]); ++i) {
+			int x = i * (UNIT + PAD) + off_x;
+			int h = (int)updates[j][i];
+			U8 hue = 0xFF - (U8)(h*2);
+			U32 color = 0xFFFF00FF | (hue << 8);
+			drawbox(x, y, UNIT, h, color);
+		}
+	}
+}
+
+void visualize(BUF(Rule *rules), BUF(U64 **updates)) {
+	setupgif(0, 1, "print_queue.gif");
+
+	clear();
+	draw_updates(updates);
+	nextframe();
+
+	endgif();
+}
+
 int main(int argc, char **argv) {
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s [input_filepath]\n", argv[0]);
@@ -138,6 +174,8 @@ int main(int argc, char **argv) {
 
 	part_one(rules, updates);
 	part_two(rules, updates);
+
+	visualize(rules, updates);
 
 	return 0;
 }
