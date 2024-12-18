@@ -11,3 +11,5 @@
 #### [Day 3: Mull It Over](03-mull-it-over)
 ![day 3 visualization](03-mull-it-over/out.gif)
 
+#### [Day 4: Ceres Search](04-ceres-search)
+![day 4 visualization](04-ceres-search/out.gif)

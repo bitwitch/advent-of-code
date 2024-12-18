@@ -52,3 +52,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2024 Day 3: Mull It Over](aoc2024/03-mull-it-over)
 ![2024 day 3 visualization](aoc2024/03-mull-it-over/out.gif)
+
+#### [2024 Day 4: Ceres Search](aoc2024/04-ceres-search)
+![2024 day 4 visualization](aoc2024/04-ceres-search/out.gif)
