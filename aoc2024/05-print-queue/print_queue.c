@@ -6,11 +6,31 @@
 #define SCREEN_WIDTH  1024
 #define SCREEN_HEIGHT 1024
 
-#define WHITE 0xFFFFFFFF
 #define ROW_HEIGHT 112
 #define ROW_WIDTH  100
 #define UNIT 2
 #define PAD 2
+#define NUM_COLS  11
+#define RULE_X 500
+#define SCANLINE_SPEED 10
+
+#define WHITE      0xFFFFFFFF
+#define RED        0xFF1904D1
+#define RULE_COLOR 0xFF00FF00
+
+typedef struct {
+	int x, y, w, h;
+	int target_x, target_y;
+	bool moving;
+	U32 color;
+} Bar;
+
+typedef struct {
+	BUF(Bar *bars);
+	bool valid;
+	bool tint_enabled;
+	U32 tint_color;
+} GUpdate;
 
 typedef struct {
 	U64 x, y;
@@ -106,27 +126,100 @@ void part_two(BUF(Rule *rules), BUF(U64 **updates)) {
 	printf("part two: %llu\n", sum);
 }
 
-void draw_updates(BUF(U64 **updates)) {
-	int num_rows = (int)(SCREEN_HEIGHT / ROW_HEIGHT);
+U32 color_from_height(int h) {
+	U8 hue = 0xFF - (U8)(h*2);
+	U32 color = 0xFFFF00FF | (hue << 8);
+	return color;
+}
+
+U32 tint_color(U32 color, U32 tint) {
+	// U32 result = color & tint;
+	U32 result = color * tint;
+	return result;
+}
+
+
+U32 blend_colors(U32 a, U32 b) {
+	// U8 r = 
+	return a + b;
+}
+
+void draw_updates(BUF(GUpdate *updates)) {
 	for (int j=0; j<buf_len(updates); ++j) {
-		int y = (j % num_rows) * ROW_HEIGHT;
-		int off_x = (j / num_rows) * (int)ROW_WIDTH;
+		GUpdate update = updates[j];
+		for (int i=0; i<buf_len(update.bars); ++i) {
+			Bar bar = update.bars[i];
+			U32 color = bar.color;
+			if (update.tint_enabled) {
+				color = tint_color(color, update.tint_color);
+			}
+			drawbox(bar.x, bar.y, UNIT, bar.h, color);
+		}
+	}
+}
+
+GUpdate *make_g_updates(BUF(U64 **updates), BUF(Rule *rules)) {
+	BUF(GUpdate *g_updates) = NULL;
+	for (int j=0; j<buf_len(updates); ++j) {
+		GUpdate gu = {0};
+		gu.valid = true;
+		int off_x = (j % NUM_COLS) * ROW_WIDTH;
+		int off_y = (j / NUM_COLS) * ROW_HEIGHT;
 		for (int i=0; i<buf_len(updates[j]); ++i) {
-			int x = i * (UNIT + PAD) + off_x;
+			if (index_violates_rules(rules, updates[j], i, NULL)) {
+				gu.valid = false;
+			}
 			int h = (int)updates[j][i];
 			U8 hue = 0xFF - (U8)(h*2);
 			U32 color = 0xFFFF00FF | (hue << 8);
-			drawbox(x, y, UNIT, h, color);
+			Bar bar = {
+				.x = i * (UNIT + PAD) + off_x,
+				.y = off_y,
+				.w = UNIT,
+				.h = h,
+				.color = color,
+			};
+			buf_push(gu.bars, bar);
+		}
+		buf_push(g_updates, gu);
+	}
+	return g_updates;
+}
+
+void move_updates(BUF(GUpdate *updates)) {
+	for (int j=0; j<buf_len(updates); ++j) {
+	}
+}
+
+void highlight_valid_updates(BUF(GUpdate *updates), int scanline) {
+	for (int j=0; j<buf_len(updates); ++j) {
+		GUpdate *update = &updates[j];
+		int update_center_y = (j / NUM_COLS) * ROW_HEIGHT + (ROW_HEIGHT/2);
+		if (scanline >= update_center_y) {
+			update->tint_enabled = true;
+			update->tint_color = update->valid ? 0xFF00FF00 : 0xFF0000FF;
 		}
 	}
 }
 
 void visualize(BUF(Rule *rules), BUF(U64 **updates)) {
 	setupgif(0, 1, "print_queue.gif");
+	
+	BUF(GUpdate *g_updates) = make_g_updates(updates, rules);
 
-	clear();
-	draw_updates(updates);
-	nextframe();
+	for (int scanline=0; scanline<SCREEN_HEIGHT; scanline+=SCANLINE_SPEED) {
+
+		clear();
+		draw_updates(g_updates);
+		drawbox(0, scanline, SCREEN_WIDTH, 2, RED);
+		nextframe();
+
+		highlight_valid_updates(g_updates, scanline);
+
+		move_updates(g_updates);
+	}
+
+	for (int i=0; i<25; ++i) nextframe();
 
 	endgif();
 }
