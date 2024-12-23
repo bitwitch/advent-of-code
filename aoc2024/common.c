@@ -35,6 +35,12 @@ U64 os_file_size(char *filepath) {
 	_stat64(filepath, &stat);
 	return stat.st_size;
 }
+#elif __APPLE__
+U64 os_file_size(char *filepath) {
+	struct stat s = {0};
+	stat(filepath, &s);
+	return s.st_size;
+}
 #else
 #error os_file_size not defined on this platform
 #endif
