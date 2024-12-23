@@ -1,5 +1,4 @@
 #include "../common.c"
-#include "../lex.c"
 
 typedef struct {
 	int x, y;
