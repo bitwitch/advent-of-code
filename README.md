@@ -55,3 +55,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2024 Day 4: Ceres Search](aoc2024/04-ceres-search)
 ![2024 day 4 visualization](aoc2024/04-ceres-search/out.gif)
+
+#### [2024 Day 6: Guard Gallivant](aoc2024/06-guard-gallivant)
+![2024 day 6 visualization](aoc2024/06-guard-gallivant/out.gif)

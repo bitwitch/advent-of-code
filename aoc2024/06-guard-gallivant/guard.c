@@ -1,4 +1,14 @@
 #include "../common.c"
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
+
+#define SCREEN_HEIGHT 1024
+#define SCREEN_WIDTH  1024
+
+#define BLACK      0xFF000000
+#define GREEN      0xFF00FF00
+#define DARK_GREEN 0xFF003300
+#define RED        0xFF0000FF
 
 typedef struct {
 	int x, y;
@@ -22,6 +32,13 @@ typedef struct {
 	BUF(Vec2 *obstacles);
 	BUF(char **grid);
 } MapInfo;
+
+typedef struct {
+	BUF(U32 **grid);
+	Loc guard;
+	int cell_size;
+	int offset;
+} Display;
 
 bool vec2_equal(Vec2 a, Vec2 b) {
 	return a.x == b.x && a.y == b.y;
@@ -187,6 +204,85 @@ void part_two(MapInfo *map) {
 	printf("part two: %d\n", count);
 }
 
+void draw_guard(Display display) {
+	int guard_x = display.guard.pos.x * display.cell_size + display.offset;
+	int guard_y = display.guard.pos.y * display.cell_size + display.offset;
+	drawbox(guard_x, guard_y, display.cell_size, display.cell_size, GREEN);
+
+	// double arrow_pad = 4;
+	// double half_cell = 0.5 * display.cell_size;
+	// int x0, y0, x1, y1;
+	// switch(display.guard.dir) {
+		// case UP:
+			// x0 = guard_x + half_cell;
+			// y0 = guard_y + display.cell_size - arrow_pad;
+			// x1 = x0;
+			// y1 = guard_y + arrow_pad;
+			// drawarrow(x0, y0, x1, y1, 3, BLACK);
+			// break;
+	// }
+}
+
+void draw_map(Display display) {
+	// draw static stuff
+	for (int j=0; j<buf_len(display.grid); ++j) {
+		for (int i=0; i<buf_len(display.grid[0]); ++i) {
+			int x = i * display.cell_size + display.offset;
+			int y = j * display.cell_size + display.offset;
+			U32 color = display.grid[j][i];
+			drawbox(x, y, display.cell_size, display.cell_size, color);
+		}
+	}
+
+	// draw guard
+	draw_guard(display);
+}
+
+Display init_display(MapInfo *map) {
+	Display display = {0};
+	for (int j=0; j <= map->bounds.y; ++j) {
+		BUF(U32 *row) = NULL;
+		for (int i=0; i <= map->bounds.x; ++i) {
+			buf_push(row, 0);
+		}
+		buf_push(display.grid, row);
+	}
+	for (int i=0; i < buf_len(map->obstacles); ++i) {
+		int x = map->obstacles[i].x;
+		int y = map->obstacles[i].y;
+		display.grid[y][x] = RED;
+	}
+	display.cell_size = SCREEN_HEIGHT / buf_len(display.grid);
+	display.offset = ((int)SCREEN_HEIGHT - (display.cell_size * buf_len(display.grid))) / 2;
+	display.guard = map->guard;
+	return display;
+}
+
+void visualize(MapInfo *map) {
+	Display display = init_display(map);
+	setupgif(0, 1, "guard.gif");
+
+	U64 skip_frames = 15;
+	U64 frames = 0;
+	while (is_on_map(map, display.guard.pos)) {
+		clear();
+		draw_map(display);
+		if ((frames++ % skip_frames) == 0)
+			nextframe();
+
+		Vec2 target = loc_one_step_forward(display.guard);
+		if (obstacle_at(map, target)) {
+			display.guard.dir = dir_turn_right(display.guard.dir);
+		} else {
+			display.guard.pos = target;
+			display.grid[target.y][target.x] = DARK_GREEN;
+		}
+	}
+
+	for (int i=0; i<25; ++i) nextframe();
+
+	endgif();
+}
 
 int main(int argc, char **argv) {
 	if (argc < 2) {
@@ -222,6 +318,7 @@ int main(int argc, char **argv) {
 
 	part_one(&map);
 	part_two(&map);
+	visualize(&map);
 
 	return 0;
 }

@@ -13,3 +13,6 @@
 
 #### [Day 4: Ceres Search](04-ceres-search)
 ![day 4 visualization](04-ceres-search/out.gif)
+
+#### [Day 6: Guard Gallivant](06-guard-gallivant)
+![day 6 visualization](06-guard-gallivant/out.gif)
