@@ -101,7 +101,7 @@ char *chop_by_delimiter(char **str, char *delimiter) {
     return chopped;
 }
 
-bool read_entire_file(char *filepath, char **file_data, size_t *out_size) {
+bool read_entire_file(char *filepath, char **file_data, U64 *out_size) {
 	FILE *f = fopen(filepath, "rb");
 	if (!f) {
 		return false;
@@ -116,7 +116,7 @@ bool read_entire_file(char *filepath, char **file_data, size_t *out_size) {
 		return false;
 	}
 
-	size_t bytes_read = fread(*file_data, 1, file_size, f);
+	U64 bytes_read = fread(*file_data, 1, file_size, f);
 	if (bytes_read < file_size && !feof(f)) {
 		fclose(f);
 		return false;
