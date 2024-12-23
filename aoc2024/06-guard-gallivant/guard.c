@@ -28,6 +28,10 @@ bool vec2_equal(Vec2 a, Vec2 b) {
 	return a.x == b.x && a.y == b.y;
 }
 
+bool loc_equal(Loc a, Loc b) {
+	return vec2_equal(a.pos, b.pos) && a.dir == b.dir;
+}
+
 Vec2 loc_one_step_forward(Loc loc) {
 	Vec2 result = loc.pos;
 	switch(loc.dir) {
@@ -61,64 +65,82 @@ Direction dir_turn_right(Direction dir) {
 void part_one(MapInfo *map) {
 	int pos_count = 0;
 	Map visited_map = {0};
-	Loc guard_start = map->guard;
-	while (is_on_map(map, map->guard.pos)) {
+	Loc loc = map->guard;
+	while (is_on_map(map, loc.pos)) {
 		char buf[32] = {0};
-		snprintf(buf, ARRAY_COUNT(buf), "x%dy%d", 
-			map->guard.pos.x, map->guard.pos.y);
+		snprintf(buf, ARRAY_COUNT(buf), "x%dy%d", loc.pos.x, loc.pos.y);
 		char *key = str_intern(buf);
 		if (map_get(&visited_map, key) == NULL) {
 			pos_count += 1;
 			map_put(&visited_map, key, (void*)1);
 		}
 
-		Vec2 target = loc_one_step_forward(map->guard);
+		Vec2 target = loc_one_step_forward(loc);
 		if (obstacle_at(map, target)) {
-			map->guard.dir = dir_turn_right(map->guard.dir);
+			loc.dir = dir_turn_right(loc.dir);
 		} else {
-			map->guard.pos = target;
+			loc.pos = target;
 		}
 	}
-	map->guard = guard_start;
 	printf("part one: %d\n", pos_count);
 }
 
-Loc *get_gaurd_path(MapInfo *map) {
+Loc *get_guard_path(MapInfo *map) {
 	BUF(Loc *path) = NULL;
-	Loc guard_start = map->guard;
-	while (is_on_map(map, map->guard.pos)) {
-		buf_push(path, map->guard);
-		Vec2 target = loc_one_step_forward(map->guard);
+	Loc loc = map->guard;
+	while (is_on_map(map, loc.pos)) {
+		buf_push(path, loc);
+		Vec2 target = loc_one_step_forward(loc);
 		if (obstacle_at(map, target)) {
-			map->guard.dir = dir_turn_right(map->guard.dir);
+			loc.dir = dir_turn_right(loc.dir);
 		} else {
-			map->guard.pos = target;
+			loc.pos = target;
 		}
 	}
-	map->guard = guard_start;
 	return path;
 }
 
-bool loc_equal(Loc a, Loc b) {
-	return vec2_equal(a.pos, b.pos) && a.dir == b.dir;
+Vec2 *get_unique_guard_positions(MapInfo *map) {
+	BUF(Vec2 *positions) = NULL;
+	Loc loc = map->guard;
+	Map visited_map = {0};
+	while (is_on_map(map, loc.pos)) {
+		char buf[32] = {0};
+		snprintf(buf, ARRAY_COUNT(buf), "x%dy%d", loc.pos.x, loc.pos.y);
+		char *key = str_intern(buf);
+		if (map_get(&visited_map, key) == NULL) {
+			map_put(&visited_map, key, (void*)1);
+			buf_push(positions, loc.pos);
+		}
+
+		Vec2 target = loc_one_step_forward(loc);
+		if (obstacle_at(map, target)) {
+			loc.dir = dir_turn_right(loc.dir);
+		} else {
+			loc.pos = target;
+		}
+	}
+	return positions;
 }
 
-void part_two(MapInfo *map) {
+
+void part_two_too_slow(MapInfo *map) {
 	int count = 0;
-	BUF(Loc *path) = get_gaurd_path(map);
+	BUF(Loc *path) = get_guard_path(map);
 
 	for (int i=1; i < buf_len(path); ++i) {
 		Vec2 obstruction = path[i].pos;
 		Loc entry_loc = path[i-1];
+		if (vec2_equal(obstruction, entry_loc.pos)) {
+			continue;
+		}
 		Loc loc = entry_loc;
 		loc.dir = dir_turn_right(loc.dir);
-		int dir_count = 0;
 
 		while (is_on_map(map, loc.pos) && !loc_equal(loc, entry_loc)) {
 			Vec2 target = loc_one_step_forward(loc);
 			if (obstacle_at(map, target)) {
 				loc.dir = dir_turn_right(loc.dir);
-				++dir_count;
 			} else {
 				loc.pos = target;
 			}
@@ -130,6 +152,42 @@ void part_two(MapInfo *map) {
 
 	printf("part two: %d\n", count);
 }
+
+void part_two(MapInfo *map) {
+	int count = 0;
+	BUF(Vec2 *positions) = get_unique_guard_positions(map);
+
+	for (int i=1; i < buf_len(positions); ++i) {
+		Loc loc = map->guard;
+		Vec2 obstruction = positions[i];
+		Map visited = {0};
+		buf_push(map->obstacles, obstruction);
+		while (is_on_map(map, loc.pos)) {
+			char buf[64] = {0};
+			snprintf(buf, ARRAY_COUNT(buf), "x%dy%dd%d",
+				loc.pos.x, loc.pos.y, (int)loc.dir);
+			char *key = str_intern(buf);
+			if (map_get(&visited, key) != NULL) {
+				// this means we detected a cycle
+				++count;
+				break;
+			}
+			map_put(&visited, key, (void*)1);
+
+			Vec2 target = loc_one_step_forward(loc);
+			if (obstacle_at(map, target)) {
+				loc.dir = dir_turn_right(loc.dir);
+			} else {
+				loc.pos = target;
+			}
+		}
+		map_clear(&visited);
+		buf_set_len(map->obstacles, buf_len(map->obstacles) - 1);
+	}
+
+	printf("part two: %d\n", count);
+}
+
 
 int main(int argc, char **argv) {
 	if (argc < 2) {
