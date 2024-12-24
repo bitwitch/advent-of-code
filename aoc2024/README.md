@@ -19,3 +19,6 @@
 
 #### [Day 6: Guard Gallivant](06-guard-gallivant)
 ![day 6 visualization](06-guard-gallivant/out.gif)
+
+#### [Day 7: Bridge Repair](07-bridge-repair)
+![day 7 visualization](07-bridge-repair/out.gif)

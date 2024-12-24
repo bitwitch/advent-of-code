@@ -61,3 +61,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2024 Day 6: Guard Gallivant](aoc2024/06-guard-gallivant)
 ![2024 day 6 visualization](aoc2024/06-guard-gallivant/out.gif)
+
+#### [2024 Day 7: Bridge Repair](aoc2024/07-bridge-repair)
+![2024 day 7 visualization](aoc2024/07-bridge-repair/out.gif)
