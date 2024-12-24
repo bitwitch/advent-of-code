@@ -2,4 +2,4 @@
 
 [Puzzle Link](https://adventofcode.com/2024/day/7)
 
-![day 7 visualization](07-bridge-repair/out.gif)
+![day 7 visualization](out.gif)
