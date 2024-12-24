@@ -1,7 +1,7 @@
-#include "..\common.c"
-#include "..\lex.c"
-#include "..\..\base\base_inc.h"
-#include "..\..\base\base_inc.c"
+#include "../common.c"
+#include "../lex.c"
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
 
 #define RED             0xFF3232AC 
 #define DARK_RED        0xFF1D1D8C
