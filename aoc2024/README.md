@@ -22,3 +22,6 @@
 
 #### [Day 7: Bridge Repair](07-bridge-repair)
 ![day 7 visualization](07-bridge-repair/out.gif)
+
+#### [Day 8: Resonant Collinearity](08-resonant-collinearity)
+![day 8 visualization](08-resonant-collinearity/out.gif)

@@ -64,3 +64,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2024 Day 7: Bridge Repair](aoc2024/07-bridge-repair)
 ![2024 day 7 visualization](aoc2024/07-bridge-repair/out.gif)
+
+#### [2024 Day 8: Resonant Collinearity](aoc2024/08-resonant-collinearity)
+![2024 day 8 visualization](aoc2024/08-resonant-collinearity/out.gif)
