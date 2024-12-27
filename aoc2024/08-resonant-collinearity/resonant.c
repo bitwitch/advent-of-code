@@ -246,16 +246,16 @@ void draw_field(Field *field, BUF(Line *lines)) {
 	for (int i=0; i<buf_len(lines); ++i) {
 		Line line = lines[i];
 		if (line.active && !vec2_equal(line.p0, line.p1)) {
-			int x0 = clamp(line.p0.x + field_pad, 0, SCREEN_WIDTH);
-			int y0 = clamp(line.p0.y + field_pad, 0, SCREEN_HEIGHT);
-			int x1 = clamp(line.p1.x + field_pad, 0, SCREEN_WIDTH);
-			int y1 = clamp(line.p1.y + field_pad, 0, SCREEN_HEIGHT);
+			int x0 = line.p0.x + field_pad;
+			int y0 = line.p0.y + field_pad;
+			int x1 = line.p1.x + field_pad;
+			int y1 = line.p1.y + field_pad;
 
-			// int x0 = clamp(line.p0.x, 0, SCREEN_WIDTH-field_pad);
-			// int y0 = clamp(line.p0.y, 0, SCREEN_HEIGHT-field_pad);
-			// int x1 = clamp(line.p1.x, 0, SCREEN_WIDTH-field_pad);
-			// int y1 = clamp(line.p1.y, 0, SCREEN_HEIGHT-field_pad);
-	
+			// int x0 = clamp(line.p0.x + field_pad, 0, SCREEN_WIDTH);
+			// int y0 = clamp(line.p0.y + field_pad, 0, SCREEN_HEIGHT);
+			// int x1 = clamp(line.p1.x + field_pad, 0, SCREEN_WIDTH);
+			// int y1 = clamp(line.p1.y + field_pad, 0, SCREEN_HEIGHT);
+
 			drawline(x0, y0, x1, y1, LINE_W, BRIGHT_RED);
 		}
 	}
