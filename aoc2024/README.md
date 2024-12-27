@@ -25,3 +25,6 @@
 
 #### [Day 8: Resonant Collinearity](08-resonant-collinearity)
 ![day 8 visualization](08-resonant-collinearity/out.gif)
+
+#### [Day 9: Disk Fragmenter](09-disk-fragmenter)
+![day 9 visualization](09-disk-fragmenter/out.gif)

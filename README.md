@@ -67,3 +67,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2024 Day 8: Resonant Collinearity](aoc2024/08-resonant-collinearity)
 ![2024 day 8 visualization](aoc2024/08-resonant-collinearity/out.gif)
+
+#### [2024 Day 9: Disk Fragmenter](aoc2024/09-disk-fragmenter)
+![2024 day 9 visualization](aoc2024/09-disk-fragmenter/out.gif)
