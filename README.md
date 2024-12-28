@@ -70,3 +70,6 @@ generally increase in difficulty each day. It is a lot of fun.
 
 #### [2024 Day 9: Disk Fragmenter](aoc2024/09-disk-fragmenter)
 ![2024 day 9 visualization](aoc2024/09-disk-fragmenter/out.gif)
+
+#### [2024 Day 10: Hoof It](aoc2024/10-hoof-it)
+![2024 day 10 visualization](aoc2024/10-hoof-it/out.gif)

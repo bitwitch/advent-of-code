@@ -28,3 +28,6 @@
 
 #### [Day 9: Disk Fragmenter](09-disk-fragmenter)
 ![day 9 visualization](09-disk-fragmenter/out.gif)
+
+#### [Day 10: Hoof It](10-hoof-it)
+![day 10 visualization](10-hoof-it/out.gif)
