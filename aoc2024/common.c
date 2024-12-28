@@ -141,15 +141,17 @@ typedef struct {
 
 // get the metadata of the array which is stored before the actual buffer in memory
 #define buf__header(b) ((BUF_Header*)((char*)b - offsetof(BUF_Header, buf)))
-// checks if n new elements will fit in the array
+// checks if n NEW elements will fit in the array
 #define buf__fits(b, n) (buf_lenu(b) + (n) <= buf_cap(b)) 
-// if n new elements will not fit in the array, grow the array by reallocating 
+// if n NEW elements will not fit in the array, grow the array by reallocating 
 #define buf__fit(b, n) (buf__fits(b, n) ? 0 : ((b) = buf__grow((b), buf_lenu(b) + (n), sizeof(*(b)))))
+// if n elements will not fit in the array, grow the array by reallocating 
+#define buf__fit__n(b, n) ((size_t)(n) <= buf_cap(b) ? 0 : ((b) = buf__grow((b), (n), sizeof(*(b)))))
 
 #define BUF(x) x // annotates that x is a stretchy buffer
 #define buf_len(b)  ((b) ? (int32_t)buf__header(b)->len : 0)
 #define buf_lenu(b) ((b) ?          buf__header(b)->len : 0)
-#define buf_set_len(b, l) buf__header(b)->len = (l)
+#define buf_set_len(b, l) ((l) ? buf__fit__n(b, l) : buf__fit__n(b, 1), buf__header(b)->len = (l))
 #define buf_cap(b) ((b) ? buf__header(b)->cap : 0)
 #define buf_end(b) ((b) + buf_lenu(b))
 #define buf_push(b, ...) (buf__fit(b, 1), (b)[buf__header(b)->len++] = (__VA_ARGS__))
