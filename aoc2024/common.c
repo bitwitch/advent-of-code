@@ -152,6 +152,7 @@ typedef struct {
 #define buf_len(b)  ((b) ? (int32_t)buf__header(b)->len : 0)
 #define buf_lenu(b) ((b) ?          buf__header(b)->len : 0)
 #define buf_set_len(b, l) ((l) ? buf__fit__n(b, l) : buf__fit__n(b, 1), buf__header(b)->len = (l))
+#define buf_set_cap(b, l) buf__fit__n(b, l)
 #define buf_cap(b) ((b) ? buf__header(b)->cap : 0)
 #define buf_end(b) ((b) + buf_lenu(b))
 #define buf_push(b, ...) (buf__fit(b, 1), (b)[buf__header(b)->len++] = (__VA_ARGS__))
@@ -379,6 +380,10 @@ char *str_intern(char *str) {
     return str_intern_range(str, str + strlen(str));
 }
 
+
+// ---------------------------------------------------------------------------
+// Random Number Generators
+// ---------------------------------------------------------------------------
 
 // PCG random number generator taken from https://en.wikipedia.org/wiki/Permuted_congruential_generator
 static U64 _rand_state            = 0x4d595df4d0f33173;   // Or something seed-dependent
