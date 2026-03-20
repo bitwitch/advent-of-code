@@ -5,6 +5,9 @@ generally increase in difficulty each day. It is a lot of fun.
 
 ### Visualizations
 
+#### [2025 Day 1: Secret Entrance](aoc2025/01-secret-entrance)
+![2025 day 1 visualization](aoc2025/01-secret-entrance/out.gif)
+
 #### [2024 Day 10: Hoof It](aoc2024/10-hoof-it)
 ![2024 day 10 visualization](aoc2024/10-hoof-it/out.gif)
 
