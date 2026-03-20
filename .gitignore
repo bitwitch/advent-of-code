@@ -3,3 +3,5 @@ prog
 *.dSYM
 *.DS_Store
 build/
+input.txt
+input_small.txt

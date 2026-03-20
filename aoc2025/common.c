@@ -101,6 +101,12 @@ char *chop_by_delimiter(char **str, char *delimiter) {
     return chopped;
 }
 
+void eat_spaces(char **str) {	
+	while (isspace(**str)) {
+		*str += 1;
+	}
+}
+
 bool read_entire_file(char *filepath, char **file_data, U64 *out_size) {
 	FILE *f = fopen(filepath, "rb");
 	if (!f) {
