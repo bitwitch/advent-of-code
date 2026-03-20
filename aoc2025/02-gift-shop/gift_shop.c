@@ -18,6 +18,7 @@ int digits(U64 n) {
 }
 
 U64 first_n_digits(U64 n, int count) {
+	count = digits(n) - count;
 	int divisor = 1;
 	for (int i=0; i<count; ++i) divisor *= 10;
 	return n / divisor;
@@ -28,6 +29,7 @@ U64 last_n_digits(U64 n, int count) {
 	for (int i=0; i<count; ++i) divisor *= 10;
 	return n % divisor;
 }
+
 
 void part_one(BUF(Range *ranges)) {
 	U64 result = 0;
@@ -47,7 +49,34 @@ void part_one(BUF(Range *ranges)) {
 }
 
 void part_two(BUF(Range *ranges)) {
-	(void)ranges;
+	U64 result = 0;
+	for (int i=0; i<buf_len(ranges); ++i) {
+		for (U64 n = ranges[i].min; n <= ranges[i].max; ++n) {
+			int num_digits = digits(n);
+			for (int j=1; j<num_digits; ++j) {
+				if ((num_digits % j) == 0) {
+					bool valid = false;
+					U64 val = first_n_digits(n, j);
+					U64 remaining = n;
+					for(int k=0; k<num_digits/j; ++k) {
+						U64 next_val = first_n_digits(remaining, j);
+						if (val != next_val) {
+							valid = true;
+							break;
+						}
+						remaining = last_n_digits(remaining, digits(remaining) - j);
+					}
+
+					if (!valid) {
+						result += n;
+						break;
+					}
+				}
+			}
+		}		
+	}
+
+	printf("part two: %llu\n", result);
 }
 
 int main(int argc, char **argv) {
