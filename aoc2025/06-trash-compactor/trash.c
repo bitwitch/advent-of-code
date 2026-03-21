@@ -1,5 +1,11 @@
 #include "../common.c"
 
+#if _WIN32
+#define LINE_END "\r\n"
+#else
+#define LINE_END "\n"
+#endif
+
 typedef enum {
 	OP_NONE,
 	OP_ADD,
@@ -7,8 +13,8 @@ typedef enum {
 } Op;
 
 typedef struct {
-	BUF(S64 *nums); 
 	Op op;
+	BUF(S64 *nums); 
 } Equation;
 
 Op op_from_char(char c) {
@@ -19,7 +25,7 @@ Op op_from_char(char c) {
 	}
 }
 
-void part_one(BUF(Equation *equations)) {
+U64 sum(BUF(Equation *equations)) {
 	U64 result = 0;
 
 	for (int i=0; i<buf_len(equations); ++i) {
@@ -43,12 +49,18 @@ void part_one(BUF(Equation *equations)) {
 		result += eq_result;
 	}
 
+	return result;
+}
+
+
+void part_one(BUF(Equation *equations)) {
+	U64 result = sum(equations);
 	printf("part one: %llu\n", result);
 }
 
 void part_two(BUF(Equation *equations)) {
-	U64 result = 0;
-	// printf("part two: %llu\n", result);
+	U64 result = sum(equations);
+	printf("part two: %llu\n", result);
 }
 
 BUF(Equation *) parse_equations(char *file_data) {
@@ -98,6 +110,81 @@ BUF(Equation *) parse_equations(char *file_data) {
 	return equations;
 }
 
+U64 pow_ten(int exp) {
+	U64 result = 1;
+	for (int i=0; i<exp; ++i) result *= 10;
+	return result;
+}
+
+BUF(Equation *) parse_ceph_equations(char *file_data) {
+	BUF(Equation *equations) = NULL;
+	
+	// count num equations and num cols
+	int num_cols = 0;
+	bool was_digit = false;
+	for (char *line = file_data; *line != '\r' && *line != '\n'; ++line) {
+		bool is_digit = isdigit(*line);
+		if (is_digit && !was_digit) buf_push(equations, (Equation){0});
+		num_cols += 1;
+		was_digit = is_digit;
+	}
+
+	// count num digits
+	int max_digits = 0;
+	for (char *c = file_data; *c != 0; ++c) {
+		if (op_from_char(*c) != OP_NONE) break;
+		max_digits += 1;
+		while (*c != '\n') c += 1;
+	}
+
+	// count num operands
+	int stride = num_cols + (int)strlen(LINE_END);
+	int eq_i = buf_len(equations) - 1;
+	Equation *e = &equations[eq_i];
+	for (int col = num_cols-1; col >= 0; --col) {
+		bool next_eq = true;
+		for (int k=0; k<max_digits; ++k) {
+			int row = k;
+			char c = file_data[row * stride + col];
+			if (isdigit(c)) {
+				buf_push(e->nums, 0);
+				next_eq = false;
+				break;
+			}
+		}
+		if (next_eq) {
+			e = &equations[--eq_i];
+		}
+	}
+
+	// parse values
+	int col = num_cols - 1;
+	for (int i=buf_len(equations); i>0; --i) {
+		Equation *e = &equations[i-1];
+		for (int j=0; j<buf_len(e->nums); ++j) {
+			BUF(U64 *digits) = NULL;
+			for (int k=0; k<max_digits; ++k) {
+				int row = k;
+				char c = file_data[row * stride + col];
+				if (isdigit(c)) {
+					buf_push(digits, c - '0');
+				}
+			}
+
+			int exp = buf_len(digits) - 1;
+			for (int k=0; k<buf_len(digits); ++k) {
+				e->nums[j] += pow_ten(exp) * digits[k];
+				exp -= 1;
+			}
+			col -= 1;
+		}
+		e->op = op_from_char(file_data[max_digits * stride + col + 1]);
+		col -= 1;
+	}
+
+	return equations;
+}
+
 int main(int argc, char **argv) {
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s [input_filepath]\n", argv[0]);
@@ -112,11 +199,14 @@ int main(int argc, char **argv) {
 		fatal("failed to read file %s", filename);
 	}
 
+	char *file_data_copy = xmalloc(file_size);
+	memcpy(file_data_copy, file_data, file_size);
 
 	BUF(Equation *equations) = parse_equations(file_data);
+	BUF(Equation *ceph_equations) = parse_ceph_equations(file_data_copy);
 
 	part_one(equations);
-	part_two(equations);
+	part_two(ceph_equations);
 
 	return 0;
 }
