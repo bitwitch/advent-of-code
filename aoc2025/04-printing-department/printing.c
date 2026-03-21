@@ -40,9 +40,35 @@ void part_one(Grid grid) {
 	printf("part one: %d\n", result);
 }
 
+int remove_accessible_rolls(Grid grid) {
+	int result = 0;
+
+	for (int j=0; j<grid.rows; ++j) {
+		for (int i=0; i<grid.cols; ++i) {
+			char c = grid.data[j * grid.cols + i];
+			if (c == '@') {
+				int count = count_neighbors(grid, j, i);
+				if (count < 4)  {
+					result += 1;
+					grid.data[j * grid.cols + i] = '.';
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
 void part_two(Grid grid) {
 	int result = 0;
-	// printf("part two: %d\n", result);
+
+	for (;;) {
+		int count = remove_accessible_rolls(grid);
+		result += count;
+		if (count == 0) break;
+	}
+
+	printf("part two: %d\n", result);
 }
 
 int main(int argc, char **argv) {
