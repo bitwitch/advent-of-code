@@ -8,3 +8,6 @@
 #### [Day 2: Gift Shop ](02-gift-shop)
 ![day 2 visualization](02-gift-shop/out.gif)
 
+#### [Day 3: Lobby](03-lobby)
+![day 3 visualization](03-lobby/out.gif)
+
