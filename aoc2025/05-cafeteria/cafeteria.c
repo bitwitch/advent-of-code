@@ -2,6 +2,7 @@
 
 typedef struct {
 	U64 min, max;
+	bool removed;
 } Range;
 
 typedef struct {
@@ -24,9 +25,51 @@ void part_one(Database db) {
 	printf("part one: %d\n", result);
 }
 
+int range_cmp(const void *_a, const void *_b) {
+	Range *a = (Range *)_a;
+	Range *b = (Range *)_b;
+	if (a->min < b->min) {
+		return -1;
+	} else if (a->min > b->min) {
+		return 1;
+	} else {
+		if (a->max < b->max) {
+			return -1;
+		} else if (a->max > b->max) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+}
+
 void part_two(Database db) {
-	int result = 0;
-	// printf("part two: %d\n", result);
+	U64 result = 0;
+
+	qsort(db.fresh, buf_len(db.fresh), sizeof(db.fresh[0]), range_cmp);
+
+	for (int i=0; i<buf_len(db.fresh); ++i) {
+		for (int j=i+1; j<buf_len(db.fresh); ++j) {
+			if (i == j) continue;
+			Range *a = &db.fresh[i];
+			Range *b = &db.fresh[j];
+			if (a->removed || b->removed) continue;
+			if (b->min >= a->min && b->max <= a->max) {
+				b->removed = true;
+			} else if (b->min >= a->min && b->min <= a->max) {
+				b->min = a->max + 1;
+			}
+		}
+	}
+
+
+	for (int i=0; i<buf_len(db.fresh); ++i) {
+		if (!db.fresh[i].removed) {
+			result += db.fresh[i].max - db.fresh[i].min + 1;
+		}
+	}
+
+	printf("part two: %llu\n", result);
 }
 
 int main(int argc, char **argv) {
