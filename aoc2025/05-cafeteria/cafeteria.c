@@ -1,4 +1,15 @@
-#include "..\common.c"
+#include "../common.c"
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
+
+#define SCREEN_SIZE 1024
+#define CELL_PAD    1
+#define CELL_SIZE   5
+#define SCREEN_COLS (SCREEN_SIZE / (CELL_SIZE + CELL_PAD))
+#define GREEN       0x11af11
+#define RED         0x1212cc
+#define GOLD        0x17e9ed
+#define GREY        0x393939
 
 typedef struct {
 	U64 min, max;
@@ -72,6 +83,70 @@ void part_two(Database db) {
 	printf("part two: %llu\n", result);
 }
 
+int map_to_screen(U64 val, U64 min, U64 max) {
+	F64 t = (F64)(val - min) / (F64)(max - min);
+	return (int)(t * SCREEN_COLS * SCREEN_COLS);
+}
+
+U64 map_to_range(int val, U64 min, U64 max) {
+	F64 t = (F64)(val) / (F64)(SCREEN_COLS * SCREEN_COLS);
+	return (U64)(t * (max - min) + min);
+}
+
+bool is_fresh(Database db, U64 id) {
+	for (int i=0; i<buf_len(db.fresh); ++i) {
+		if (id >= db.fresh[i].min && id <= db.fresh[i].max) 
+			return true;
+	}
+	return false;
+}
+
+void visualize(Database db) {
+	setupgif(1, 1, "cafeteria.gif");
+
+	U64 min = UINT64_MAX;
+	U64 max = 0;
+	for (int i=0; i<buf_len(db.fresh); ++i) {
+		if (db.fresh[i].min < min) min = db.fresh[i].min;
+		if (db.fresh[i].max > max) max = db.fresh[i].max;
+	}
+
+	int num_pixels = SCREEN_COLS * SCREEN_COLS;
+	for (int i=0; i<num_pixels; ++i) {
+		U64 val = map_to_range(i, min, max);
+		U32 color = is_fresh(db, val) ? GREEN : GREY;
+		int x = 3 + (i % SCREEN_COLS) * (CELL_SIZE + CELL_PAD);
+		int y = 3 + (i / SCREEN_COLS) * (CELL_SIZE + CELL_PAD);
+		drawbox(x, y, CELL_SIZE, CELL_SIZE, color);
+	}
+
+	 nextframe();
+	 nextframe();
+
+	for (int i=0; i<buf_len(db.ingredients); ++i) {
+		U64 id = db.ingredients[i];
+		int pixel_index = map_to_screen(id, min, max);
+		U32 color = RED;
+		for (int j=0; j<buf_len(db.fresh); ++j) {
+			Range range = db.fresh[j];
+			if (id >= range.min && id <= range.max) {
+				color = GOLD;
+				break;
+			}
+		}
+
+		int x = 3 + (pixel_index % SCREEN_COLS) * (CELL_SIZE + CELL_PAD);
+		int y = 3 + (pixel_index / SCREEN_COLS) * (CELL_SIZE + CELL_PAD);
+		drawbox(x, y, CELL_SIZE, CELL_SIZE, color);
+		nextframe();
+	}
+	
+	for (int i=0; i<16; ++i) nextframe();
+
+	endgif();
+}
+
+
 int main(int argc, char **argv) {
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s [input_filepath]\n", argv[0]);
@@ -108,8 +183,13 @@ int main(int argc, char **argv) {
 		buf_push(db.ingredients, id);
 	}
 
+	Database db_copy = {0};
+	for (int i=0; i<buf_len(db.fresh); ++i)       buf_push(db_copy.fresh, db.fresh[i]);
+	for (int i=0; i<buf_len(db.ingredients); ++i) buf_push(db_copy.ingredients, db.ingredients[i]);
+
 	part_one(db);
 	part_two(db);
+	visualize(db_copy);
 
 	return 0;
 }

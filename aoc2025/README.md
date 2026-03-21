@@ -14,3 +14,6 @@
 #### [Day 4: Printing Department](04-printing-department)
 ![day 4 visualization](04-printing-department/out.gif)
 
+#### [Day 5: Cafeteria](05-cafeteria)
+![day 5 visualization](05-cafeteria/out.gif)
+

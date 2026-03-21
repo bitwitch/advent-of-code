@@ -1,9 +1,11 @@
 # Advent of Code
 
-[Advent of Code](https://adventofcode.com) is an Advent calendar of programming puzzles. The puzzles  
-generally increase in difficulty each day. It is a lot of fun.  
+[Advent of Code](https://adventofcode.com) is an Advent calendar of programming puzzles. The puzzles generally increase in difficulty each day. It is a lot of fun.  
 
 ### Visualizations
+
+#### [2025 Day 5: Cafeteria](aoc2025/05-cafeteria)
+![2025 day 5 visualization](aoc2025/05-cafeteria/out.gif)
 
 #### [2025 Day 4: Printing Department](aoc2025/04-printing-department)
 ![2025 day 4 visualization](aoc2025/04-printing-department/out.gif)
