@@ -1,4 +1,4 @@
-#include "..\common.c"
+#include "../common.c"
 
 void part_one(char *file_data, U64 file_size) {
 	(void)file_data; 
