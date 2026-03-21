@@ -19,7 +19,6 @@ void part_one(BUF(Bank *banks)) {
 			}
 		}
 
-
 		int max_num_2 = 0;
 		for (int i=max_index+1; i<buf_len(batteries); ++i) {
 			if (batteries[i] > max_num_2) {
@@ -34,9 +33,39 @@ void part_one(BUF(Bank *banks)) {
 	printf("part one: %d\n", result);
 }
 
+void bank_max_in_range(Bank bank, int start_index, int stop_index, int *max_value, int *max_index) {
+	int num_batteries = buf_len(bank.batteries);
+	*max_value = 0;
+	for (int i=start_index; i<stop_index; ++i) {
+		if (bank.batteries[i] > *max_value) {
+			*max_value = bank.batteries[i];
+			*max_index = i;
+		}
+	}
+}
+
+U64 pow_ten(int exp) {
+	U64 result = 1;
+	for (int i=0; i<exp; ++i) result *= 10;
+	return result;
+}
+
+
 void part_two(BUF(Bank *banks)) {
-	int result = 0;
-	// printf("part two: %d\n", result);
+	U64 result = 0;
+
+	for (int bank_i=0; bank_i<buf_len(banks); ++bank_i) {
+		int max_index = -1;
+		int max_value = 0;
+		int num_batteries = buf_len(banks[bank_i].batteries);
+		for (int digit = 12; digit > 0; --digit) {
+			int start_index = max_index+1;
+			bank_max_in_range(banks[bank_i], max_index+1, num_batteries - (digit - 1), &max_value, &max_index);
+			result += pow_ten(digit-1) * max_value;
+		}
+	}
+
+	printf("part two: %llu\n", result);
 }
 
 int main(int argc, char **argv) {
