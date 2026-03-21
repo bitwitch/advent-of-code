@@ -5,6 +5,9 @@ generally increase in difficulty each day. It is a lot of fun.
 
 ### Visualizations
 
+#### [2025 Day 4: Printing Department](aoc2025/04-printing-department)
+![2025 day 4 visualization](aoc2025/04-printing-department/out.gif)
+
 #### [2025 Day 3: Lobby](aoc2025/03-lobby)
 ![2025 day 3 visualization](aoc2025/03-lobby/out.gif)
 

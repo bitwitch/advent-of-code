@@ -11,3 +11,6 @@
 #### [Day 3: Lobby](03-lobby)
 ![day 3 visualization](03-lobby/out.gif)
 
+#### [Day 4: Printing Department](04-printing-department)
+![day 4 visualization](04-printing-department/out.gif)
+
