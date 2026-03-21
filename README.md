@@ -5,6 +5,9 @@ generally increase in difficulty each day. It is a lot of fun.
 
 ### Visualizations
 
+#### [2025 Day 2: Gift Shop ](aoc2025/02-gift-shop)
+![2025 day 2 visualization](aoc2025/02-gift-shop/out.gif)
+
 #### [2025 Day 1: Secret Entrance](aoc2025/01-secret-entrance)
 ![2025 day 1 visualization](aoc2025/01-secret-entrance/out.gif)
 
