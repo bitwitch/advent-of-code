@@ -4,6 +4,9 @@
 
 ### Visualizations
 
+#### [2025 Day 6: Cafeteria](aoc2025/06-trash-compactor)
+![2025 day 6 visualization](aoc2025/06-trash-compactor/out.gif)
+
 #### [2025 Day 5: Cafeteria](aoc2025/05-cafeteria)
 ![2025 day 5 visualization](aoc2025/05-cafeteria/out.gif)
 

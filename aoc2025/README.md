@@ -17,3 +17,6 @@
 #### [Day 5: Cafeteria](05-cafeteria)
 ![day 5 visualization](05-cafeteria/out.gif)
 
+#### [Day 6: Cafeteria](06-trash-compactor)
+![day 6 visualization](06-trash-compactor/out.gif)
+
