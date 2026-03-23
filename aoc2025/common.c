@@ -345,6 +345,57 @@ void map_test(void) {
 	}
 }
 
+// ---------------------------------------------------------------------------
+// String Views
+// ---------------------------------------------------------------------------
+#define SV_FMT      "%.*s"
+#define SV_ARGS(sv) (sv).length, (sv).data
+
+typedef struct {
+	char *data;
+	int length;
+} StringView;
+
+StringView sv_from_cstr(char *cstr) {
+	return (StringView) {
+		.data = cstr,
+		.length = (int)strlen(cstr),
+	};
+}
+
+StringView sv_chop_by_delimiter(StringView *sv, char delimiter) {
+	StringView result = {
+		.data = sv->data,
+		.length = sv->length,
+	};
+
+	int i;
+	for (i=0; i<sv->length; ++i) {
+		if (sv->data[i] == delimiter) {
+			result.length = i;
+			sv->data += i + 1;
+			sv->length -= i + 1;
+			break;
+		}
+	}
+
+	if (i == sv->length) {
+		sv->length = 0;
+	}
+
+    return result;
+}
+
+
+StringView sv_chop_line(StringView *sv) {
+	StringView result = sv_chop_by_delimiter(sv, '\n');
+	// handle windows CRLF
+	if (result.length > 0 && result.data[result.length-1] == '\r') {
+		result.length -= 1;
+	}
+	return result;
+}
+
 
 // ---------------------------------------------------------------------------
 // String Interning
