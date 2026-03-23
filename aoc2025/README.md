@@ -20,3 +20,6 @@
 #### [Day 6: Trash Compactor](06-trash-compactor)
 ![day 6 visualization](06-trash-compactor/out.gif)
 
+#### [Day 7: Laboratories](07-laboratories)
+![day 7 visualization](07-laboratories/out.gif)
+
