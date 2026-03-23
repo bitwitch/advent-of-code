@@ -1,5 +1,21 @@
 #include "../common.c"
 #include <float.h> // for FLT_MAX
+#include "../../base/base_inc.h"
+#include "../../base/base_inc.c"
+
+#define SCREEN_SIZE 1024
+#define WIRE_COLOR  0x24ff24
+#define JCOLOR      0x957b7c
+#define JSIZE       9
+
+typedef struct {
+	int x, y;
+} Vec2;
+
+typedef struct {
+	F32 x0, x1;
+	F32 y0, y1;
+} Bounds;
 
 typedef struct {
 	F32 x, y, z;
@@ -136,6 +152,75 @@ void part_two(BUF(Junction *junctions), BUF(Distance *distances)) {
 	printf("part two: %d\n", result);
 }
 
+Vec2 map_to_screen(Vec3 pos, Bounds bounds) {
+	F32 tx = (pos.x - bounds.x0) / (bounds.x1 - bounds.x0);
+	F32 ty = (pos.y - bounds.y0) / (bounds.y1 - bounds.y0);
+	return (Vec2){
+		.x = (int)(SCREEN_SIZE * tx),
+		.y = (int)(SCREEN_SIZE * ty),
+	};
+}
+
+
+void draw_junctions(BUF(Junction *junctions), Bounds bounds) {
+	for (int i=0; i<buf_len(junctions); ++i) {
+		Vec2 coords = map_to_screen(junctions[i].pos, bounds);
+		drawbox(coords.x, coords.y, JSIZE, JSIZE, JCOLOR);
+	}
+}
+
+void draw_connections(BUF(Junction *junctions), Bounds bounds) {
+	for (int i=0; i<buf_len(junctions); ++i) {
+		Vec2 a = map_to_screen(junctions[i].pos, bounds);
+		for (int j=0; j<buf_len(junctions[i].connections); ++j) {
+			Vec3 p = junctions[junctions[i].connections[j]].pos;
+			Vec2 b = map_to_screen(p, bounds);
+			drawline(a.x, a.y, b.x, b.y, 1, WIRE_COLOR);
+		}
+	}
+}
+
+void visualize(BUF(Junction *junctions), BUF(Distance *distances)) {
+	Bounds bounds = { .x0 = FLT_MAX, .y0 = FLT_MAX, .x1 = 0, .y1 = 0, };
+	for (int i=0; i<buf_len(junctions); ++i) {
+		Vec3 p = junctions[i].pos;
+		if (p.x < bounds.x0) bounds.x0 = p.x;
+		if (p.y < bounds.y0) bounds.y0 = p.y;
+		if (p.x > bounds.x1) bounds.x1 = p.x;
+		if (p.y > bounds.y1) bounds.y1 = p.y;
+	}
+
+	setupgif(1, 1, "playground.gif");
+	draw_junctions(junctions, bounds);
+	nextframe();
+	nextframe();
+
+	int skip_frames = 10;
+	int frame = 0;
+	for (int i=0; i < buf_len(distances); ++i) {
+		Distance d = distances[i];
+		if (!is_connected(junctions, d.id_a, d.id_b)) {
+			buf_push(junctions[d.id_a].connections, d.id_b);
+			buf_push(junctions[d.id_b].connections, d.id_a);
+
+			if (frame++ % skip_frames == 0) {
+				draw_connections(junctions, bounds);
+				draw_junctions(junctions, bounds);
+				nextframe();
+			}
+
+			int len = circuit_length(junctions, d.id_a, NULL);
+			if (len == buf_len(junctions)) {
+				break;
+			}
+		}
+	}
+
+	for (int i=0; i<16; ++i) nextframe();
+	endgif();
+}
+
+
 BUF(Distance *) calculate_distances(BUF(Junction *junctions)) {
 	BUF(Distance *distances) = NULL;
 	int num_junctions = buf_len(junctions);
@@ -152,6 +237,12 @@ BUF(Distance *) calculate_distances(BUF(Junction *junctions)) {
 		}
 	}
 	return distances;
+}
+
+void clear_connections(BUF(Junction *junctions)) {
+	for (int i=0; i<buf_len(junctions); ++i) {
+		buf_set_len(junctions[i].connections, 0);
+	}
 }
 
 int cmp_distances(const void *_a, const void *_b) {
@@ -177,22 +268,24 @@ int main(int argc, char **argv) {
 	}
 
 	BUF(Junction *junctions) = NULL;
-	BUF(Junction *junctions_copy) = NULL;
 	for (;;) {
 		char *line = chop_by_delimiter(&file_data, "\n");
 		if (*line == '\r' || *line == 0) break;
 		Junction j = {0};
 		sscanf(line, "%f,%f,%f", &j.pos.x, &j.pos.y, &j.pos.z);
 		buf_push(junctions, j);
-		Junction j2 = j;
-		buf_push(junctions_copy, j2);
 	}
 
 	BUF(Distance *distances) = calculate_distances(junctions);
 	qsort(distances, buf_len(distances), sizeof(distances[0]), cmp_distances);
 
 	part_one(junctions, distances);
-	part_two(junctions_copy, distances);
+	
+	clear_connections(junctions);
+	part_two(junctions, distances);
+
+	clear_connections(junctions);
+	visualize(junctions, distances);
 
 	return 0;
 }

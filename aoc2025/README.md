@@ -23,3 +23,6 @@
 #### [Day 7: Laboratories](07-laboratories)
 ![day 7 visualization](07-laboratories/out.gif)
 
+#### [Day 8: Playground](08-playground)
+![day 8 visualization](08-playground/out.gif)
+

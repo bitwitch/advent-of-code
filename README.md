@@ -4,6 +4,9 @@
 
 ### Visualizations
 
+#### [2025 Day 8: Playground](aoc2025/08-playground)
+![2025 day 8 visualization](aoc2025/08-playground/out.gif)
+
 #### [2025 Day 7: Laboratories](aoc2025/07-laboratories)
 ![2025 day 7 visualization](aoc2025/07-laboratories/out.gif)
 
