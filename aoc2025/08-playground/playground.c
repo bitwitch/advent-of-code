@@ -5,11 +5,15 @@ typedef struct {
 	F32 x, y, z;
 } Vec3;
 
-typedef struct Junction Junction;
-struct Junction {
+typedef struct {
 	Vec3 pos;
 	BUF(int *connections);
-};
+} Junction;
+
+typedef struct {
+	F32 dist;
+	int id_a, id_b;
+} Distance;
 
 Vec3 vec3_sub(Vec3 a, Vec3 b) {
 	return (Vec3) {
@@ -44,7 +48,10 @@ void ciruit_length_traverse(BUF(Junction *junctions), size_t id, Map *visited, M
 		bool seen = (bool)map_get(visited, (void*)(other+1)); 
 		if (!seen) {
 			map_put(visited, (void*)(other+1), (void*)1);
-			map_put(external_visited, (void*)(other+1), (void*)1);
+			if (external_visited) {
+				map_put(external_visited, (void*)(other+1), (void*)1);
+			}
+			
 			ciruit_length_traverse(junctions, other, visited, external_visited);
 		}
 	}
@@ -54,32 +61,35 @@ int circuit_length(BUF(Junction *junctions), size_t id, Map *external_visited) {
 	Map visited = {0};
 	// NOTE: add one because hash map cannot store 0 values
 	map_put(&visited, (void*)(id+1), (void*)1);
-	map_put(external_visited, (void*)(id+1), (void*)1);
+	if (external_visited) {
+		map_put(external_visited, (void*)(id+1), (void*)1);
+	}
 	ciruit_length_traverse(junctions, id, &visited, external_visited);
 	int length = (int)visited.len;
 	map_clear(&visited);
 	return length;
 }
 
-void part_one(BUF(Junction *junctions)) {
-	int max_connections = buf_len(junctions) < 1000 ? 10 : 1000;
-	for (int k=0; k<max_connections; ++k) {
-		F32 min_dist = FLT_MAX;
-		int min_a, min_b;
-		for (int i=0; i<buf_len(junctions)-1; ++i) {
-			for (int j=i+1; j<buf_len(junctions); ++j) {
-				F32 dist = vec3_dist2(junctions[i].pos, junctions[j].pos);
-				if (dist < min_dist && !is_connected(junctions, i, j)) {
-					min_dist = dist;
-					min_a = i;
-					min_b = j;
-				}
-			}
-		}
+void junction_print(Junction j, int id) {
+	printf("%4d (%.0f, %.0f, %.0f) %d connections [", id, j.pos.x, j.pos.y, j.pos.z, buf_len(j.connections));
+	for (int i=0; i<buf_len(j.connections); ++i) {
+		if (i > 0) printf(", ");
+		printf("%d", j.connections[i]);
+	}
+	printf("]\n");
+}
 
-		assert(min_dist < FLT_MAX);
-		buf_push(junctions[min_a].connections, min_b);
-		buf_push(junctions[min_b].connections, min_a);
+void part_one(BUF(Junction *junctions), BUF(Distance *distances)) {
+	int max_connections = buf_len(junctions) < 1000 ? 10 : 1000;
+	int i=0;
+	for (int k=0; k<max_connections; ++k) {
+		Distance d = distances[i];
+		while (i < buf_len(distances) && is_connected(junctions, d.id_a, d.id_b)) {
+			i += 1;
+			d = distances[i];
+		}
+		buf_push(junctions[d.id_a].connections, d.id_b);
+		buf_push(junctions[d.id_b].connections, d.id_a);
 	}
 
 	// find 3 largest circuits
@@ -108,9 +118,48 @@ void part_one(BUF(Junction *junctions)) {
 	printf("part one: %d\n", len_3 * len_2 * len_1);
 }
 
-void part_two(BUF(Junction *junctions)) {
+void part_two(BUF(Junction *junctions), BUF(Distance *distances)) {
 	int result = 0;
-	// printf("part two: %d\n", result);
+	for (int i=0; i < buf_len(distances); ++i) {
+		Distance d = distances[i];
+		if (!is_connected(junctions, d.id_a, d.id_b)) {
+			buf_push(junctions[d.id_a].connections, d.id_b);
+			buf_push(junctions[d.id_b].connections, d.id_a);
+			int len = circuit_length(junctions, d.id_a, NULL);
+			if (len == buf_len(junctions)) {
+				result = (int)junctions[d.id_a].pos.x * (int)junctions[d.id_b].pos.x;
+				break;
+			}
+		}
+	}
+
+	printf("part two: %d\n", result);
+}
+
+BUF(Distance *) calculate_distances(BUF(Junction *junctions)) {
+	BUF(Distance *distances) = NULL;
+	int num_junctions = buf_len(junctions);
+	buf_set_cap(distances, num_junctions*num_junctions);
+
+	for (int i=0; i<num_junctions-1; ++i) {
+		for (int j=i+1; j<num_junctions; ++j) {
+			Distance d = {
+				.dist = vec3_dist2(junctions[i].pos, junctions[j].pos),
+				.id_a = i,
+				.id_b = j,
+			};
+			buf_push(distances, d);
+		}
+	}
+	return distances;
+}
+
+int cmp_distances(const void *_a, const void *_b) {
+	Distance *a = (Distance*)_a;
+	Distance *b = (Distance*)_b;
+	if (a->dist < b->dist) return -1;
+	if (a->dist > b->dist) return 1;
+	return 0;
 }
 
 int main(int argc, char **argv) {
@@ -128,16 +177,22 @@ int main(int argc, char **argv) {
 	}
 
 	BUF(Junction *junctions) = NULL;
+	BUF(Junction *junctions_copy) = NULL;
 	for (;;) {
 		char *line = chop_by_delimiter(&file_data, "\n");
 		if (*line == '\r' || *line == 0) break;
 		Junction j = {0};
 		sscanf(line, "%f,%f,%f", &j.pos.x, &j.pos.y, &j.pos.z);
 		buf_push(junctions, j);
+		Junction j2 = j;
+		buf_push(junctions_copy, j2);
 	}
 
-	part_one(junctions);
-	part_two(junctions);
+	BUF(Distance *distances) = calculate_distances(junctions);
+	qsort(distances, buf_len(distances), sizeof(distances[0]), cmp_distances);
+
+	part_one(junctions, distances);
+	part_two(junctions_copy, distances);
 
 	return 0;
 }
