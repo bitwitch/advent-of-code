@@ -26,3 +26,6 @@
 #### [Day 8: Playground](08-playground)
 ![day 8 visualization](08-playground/out.gif)
 
+#### [Day 9: Movie Theater](09-movie-theater)
+![day 9 visualization](09-movie-theater/out.gif)
+

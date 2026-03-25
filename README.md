@@ -4,6 +4,9 @@
 
 ### Visualizations
 
+#### [2025 Day 9: Movie Theater](aoc2025/09-movie-theater)
+![2025 day 9 visualization](aoc2025/09-movie-theater/out.gif)
+
 #### [2025 Day 8: Playground](aoc2025/08-playground)
 ![2025 day 8 visualization](aoc2025/08-playground/out.gif)
 
