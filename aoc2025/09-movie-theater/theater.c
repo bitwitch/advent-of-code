@@ -193,7 +193,7 @@ void part_two(Grid grid) {
 void visualize(Grid grid) {
 	setupgif(1, 1, "theater.gif");
 
-	// trace a path from tile to tile
+	// // trace a path from tile to tile
 	draw_grid(grid);
 	nextframe();
 	nextframe();
@@ -230,9 +230,23 @@ void visualize(Grid grid) {
 		}
 	}
 
-	Vec2 a = map_to_screen(grid.tiles[max_a], grid.bounds);
-	Vec2 b = map_to_screen(grid.tiles[max_b], grid.bounds);
-	drawrect(a.x, a.y, b.x, b.y, GREEN);
+	
+	{ // draw largest valid rect
+		Vec2 a = map_to_screen(grid.tiles[max_a], grid.bounds);
+		Vec2 b = map_to_screen(grid.tiles[max_b], grid.bounds);
+		drawrect(a.x, a.y, b.x, b.y, GREEN);
+	}
+
+	
+	{ // draw area string
+		int font_size = 4;
+		int x = SCREEN_SIZE/2 - 2*font_size*8;
+		int y = 200;
+		S64 sum = 1544362560;
+		drawstringf(x, y, font_size, 0xffffff, "area");
+		drawstringf(x - 3*font_size*8, y + font_size*12, font_size, 0xffffff, "%lld", sum);
+	}
+
 	for (int i=0; i<64; ++i) nextframe();
 
 	endgif();
@@ -277,8 +291,8 @@ int main(int argc, char **argv) {
 	int largest_dim = MIN(grid.bounds.x1 - grid.bounds.x0, grid.bounds.y1 - grid.bounds.y0);
 	grid.cell_size = (int)(SCREEN_SIZE / largest_dim);
 
-	part_one(grid);
-	part_two(grid);
+	// part_one(grid);
+	// part_two(grid);
 	visualize(grid);
 
 	return 0;
