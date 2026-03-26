@@ -163,6 +163,7 @@ typedef struct {
 #define buf_end(b) ((b) + buf_lenu(b))
 #define buf_push(b, ...) (buf__fit(b, 1), (b)[buf__header(b)->len++] = (__VA_ARGS__))
 #define buf_free(b) ((b) ? (free(buf__header(b)), (b) = NULL) : 0)
+#define buf_zero(b) ((b) ? memset(b, 0, buf__header(b)->len * sizeof((b)[0])) : 0)
 #define buf_printf(b, ...) ((b) = buf__printf((b), __VA_ARGS__))
 
 void *buf__grow(void *buf, size_t new_len, size_t elem_size) {
@@ -180,6 +181,7 @@ void *buf__grow(void *buf, size_t new_len, size_t elem_size) {
 	new_header->cap = new_cap;
 	return new_header->buf;
 }
+
 
 // ---------------------------------------------------------------------------
 // Arena Allocator
