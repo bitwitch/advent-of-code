@@ -29,3 +29,6 @@
 #### [Day 9: Movie Theater](09-movie-theater)
 ![day 9 visualization](09-movie-theater/out.gif)
 
+#### [Day 10: Factory](10-factory)
+![day 10 visualization](10-factory/out.gif)
+

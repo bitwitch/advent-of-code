@@ -4,6 +4,9 @@
 
 ### Visualizations
 
+#### [2025 Day 10: Factory](aoc2025/10-factory)
+![2025 day 10 visualization](aoc2025/10-factory/out.gif)
+
 #### [2025 Day 9: Movie Theater](aoc2025/09-movie-theater)
 ![2025 day 9 visualization](aoc2025/09-movie-theater/out.gif)
 
